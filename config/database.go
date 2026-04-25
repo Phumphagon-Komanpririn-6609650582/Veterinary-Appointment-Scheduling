@@ -34,12 +34,12 @@ func createTables() {
 
 	createSlotsTable := `
 	CREATE TABLE IF NOT EXISTS slots (
-		id TEXT PRIMARY KEY,
-		vet_id TEXT NOT NULL,
-		start_time DATETIME NOT NULL,
-		end_time DATETIME NOT NULL,
-		slot_limit INTEGER DEFAULT 1,
-		FOREIGN KEY(vet_id) REFERENCES users(id)
+    	id TEXT PRIMARY KEY,
+    	vet_id TEXT NOT NULL,
+    	date TEXT NOT NULL,           
+    	time_period TEXT NOT NULL,   
+    	slot_limit INTEGER DEFAULT 1,
+    	FOREIGN KEY(vet_id) REFERENCES users(id)
 	);`
 
 	createAppointmentsTable := `
