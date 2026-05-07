@@ -18,7 +18,19 @@ func NewSlotController(service *services.SlotService) *SlotController {
 // 👨‍💻 พื้นที่ของ: ภูมิ (GET /api/vets/:id/slots)
 // =====================================================================
 func (c *SlotController) GetAvailableSlots(ctx *gin.Context) {
+	vetID := ctx.Param("id")
 
+	slots, err := c.Service.GetAvailableSlots(vetID)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch available slots"})
+		return
+	}
+
+	// ส่งข้อมูลเวลาว่างกลับไปเป็น JSON
+	ctx.JSON(200, gin.H{
+		"message": "Success",
+		"data":    slots,
+	})
 }
 
 // =====================================================================

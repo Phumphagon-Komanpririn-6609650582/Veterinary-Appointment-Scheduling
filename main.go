@@ -19,16 +19,22 @@ func main() {
 	}
 	defer db.Close()
 
-	//ประกอบร่าง API
+	//Vet-API
 	vetRepo := repositories.NewVetRepository(db)
 	vetService := services.NewVetService(vetRepo)
 	vetController := controllers.NewVetController(vetService)
+
+	//Slots-API
+	slotRepo := repositories.NewSlotRepository(db)
+	slotService := services.NewSlotService(slotRepo)
+	slotController := controllers.NewSlotController(slotService)
 
 	//ตั้งค่า Gin Web Server
 	r := gin.Default()
 
 	//Routes
 	r.GET("/api/vets", vetController.GetAllVets)
+	r.GET("/api/vets/:id/slots", slotController.GetAvailableSlots)
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")
