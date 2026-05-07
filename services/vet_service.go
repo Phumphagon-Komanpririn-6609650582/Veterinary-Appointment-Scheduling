@@ -1,6 +1,7 @@
 package services
 
 import (
+	"veterinary-api/models"
 	"veterinary-api/repositories"
 )
 
@@ -15,6 +16,6 @@ func NewVetService(repo *repositories.VetRepository) *VetService {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: ภูมิ (ดึงข้อมูลหมอทั้งหมดไปทำตัวเลือก)
 // =====================================================================
-func (s *VetService) GetAllVets() {
-
+func (s *VetService) GetAllVets() ([]models.User, error) {
+	return s.Repo.GetAllVets()
 }

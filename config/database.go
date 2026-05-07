@@ -16,7 +16,6 @@ func InitDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// 2. เรียกใช้ฟังก์ชันสร้างตาราง
 	createTables()
 	log.Println("Database initialized successfully!")
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"veterinary-api/models"
 	"veterinary-api/repositories"
 )
 
@@ -13,10 +14,10 @@ func NewSlotService(repo *repositories.SlotRepository) *SlotService {
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: ภูมิ (กรองและแสดงเฉพาะเวลาที่ว่าง)
+// 👨‍💻 พื้นที่ของ: ภูมิ ( ดูช่วงเวลาว่างของสัตวแพทย์แต่ละท่าน)
 // =====================================================================
-func (s *SlotService) GetAvailableSlots() {
-
+func (s *SlotService) GetAvailableSlots(vetID string) ([]models.Slot, error) {
+	return s.Repo.GetAvailableSlots(vetID)
 }
 
 // =====================================================================
