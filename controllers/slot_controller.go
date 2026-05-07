@@ -2,17 +2,25 @@ package controllers
 
 import (
 	"net/http"
+	"veterinary-api/models" // 🔥 ต้อง import models เพราะเราจะทำ Interface
 	"veterinary-api/repositories"
-	"veterinary-api/services"
 
 	"github.com/gin-gonic/gin"
 )
 
-type SlotController struct {
-	Service *services.SlotService
+// =====================================================================
+// 🔥 ทริค Tech Lead: สร้าง Interface ฝั่ง Controller เองเลย!
+// =====================================================================
+type ISlotService interface {
+	GetAvailableSlots(vetID string) ([]models.Slot, error)
+	GetAllAvailableSlots() ([]models.Slot, error)
 }
 
-func NewSlotController(service *services.SlotService) *SlotController {
+type SlotController struct {
+	Service ISlotService // 🔥 เปลี่ยนมารับ Interface ของเราเอง
+}
+
+func NewSlotController(service ISlotService) *SlotController {
 	return &SlotController{Service: service}
 }
 
@@ -45,5 +53,22 @@ func (c *SlotController) GetAvailableSlots(ctx *gin.Context) {
 // 👩‍💻 พื้นที่ของ: ไตเติ้ล (POST /api/vets/:id/slots)
 // =====================================================================
 func (c *SlotController) AddSlot(ctx *gin.Context) {
-	// (เว้นไว้ให้ไตเติ้ลทำต่อ)
+
+}
+
+// =====================================================================
+// 👨‍💻 พื้นที่ของ: ภูมิ (GET /api/vets/:id/slots)
+// =====================================================================
+func (c *SlotController) GetAllAvailableSlots(ctx *gin.Context) {
+	slots, err := c.Service.GetAllAvailableSlots()
+	if err != nil {
+		if err == repositories.ErrNotFound {
+			respondWithError(ctx, http.StatusNotFound, "No available slots found")
+			return
+		}
+		respondWithError(ctx, http.StatusInternalServerError, "Failed to retrieve all available slots")
+		return
+	}
+
+	ctx.JSON(http.StatusOK, slots)
 }

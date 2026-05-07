@@ -35,6 +35,7 @@ func main() {
 	//Routes
 	r.GET("/api/vets", vetController.GetAllVets)
 	r.GET("/api/vets/:id/slots", slotController.GetAvailableSlots)
+	r.GET("/api/slots", slotController.GetAllAvailableSlots)
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")

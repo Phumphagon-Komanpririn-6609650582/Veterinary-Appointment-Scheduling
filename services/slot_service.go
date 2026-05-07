@@ -26,3 +26,10 @@ func (s *SlotService) GetAvailableSlots(vetID string) ([]models.Slot, error) {
 func (s *SlotService) AddSlot() {
 
 }
+
+// =====================================================================
+// 👨‍💻 พื้นที่ของ: ภูมิ ( ดูช่วงเวลาว่างของสัตวแพทย์แต่ละท่าน)
+// =====================================================================
+func (s *SlotService) GetAllAvailableSlots() ([]models.Slot, error) {
+	return s.Repo.GetAllAvailableSlots()
+}
