@@ -26,7 +26,6 @@ func (c *SlotController) GetAvailableSlots(ctx *gin.Context) {
 		return
 	}
 
-	// ส่งข้อมูลเวลาว่างกลับไปเป็น JSON
 	ctx.JSON(200, gin.H{
 		"message": "Success",
 		"data":    slots,
