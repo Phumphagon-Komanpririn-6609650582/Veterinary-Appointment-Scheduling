@@ -2,8 +2,12 @@ package repositories
 
 import (
 	"database/sql"
+	"errors"
 	"veterinary-api/models"
 )
+
+// ประกาศตัวแปร ErrNotFound เพื่อให้ Controller นำไปใช้เช็กและตอบ Status 404 ได้
+var ErrNotFound = errors.New("record not found")
 
 type SlotRepository struct {
 	DB *sql.DB
@@ -37,6 +41,12 @@ func (r *SlotRepository) GetAvailableSlots(vetID string) ([]models.Slot, error) 
 		}
 		slots = append(slots, slot)
 	}
+
+	// ถ้า Query สำเร็จ แต่ไม่มีข้อมูลกลับมาเลย (array ว่าง) ให้ส่ง ErrNotFound ออกไป
+	if len(slots) == 0 {
+		return nil, ErrNotFound
+	}
+
 	return slots, nil
 }
 

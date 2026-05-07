@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+	"veterinary-api/repositories"
 	"veterinary-api/services"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +16,10 @@ func NewSlotController(service *services.SlotService) *SlotController {
 	return &SlotController{Service: service}
 }
 
+func respondWithError(c *gin.Context, code int, message string) {
+	c.JSON(code, gin.H{"error": message})
+}
+
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: ภูมิ (GET /api/vets/:id/slots)
 // =====================================================================
@@ -22,19 +28,22 @@ func (c *SlotController) GetAvailableSlots(ctx *gin.Context) {
 
 	slots, err := c.Service.GetAvailableSlots(vetID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to fetch available slots"})
+
+		if err == repositories.ErrNotFound {
+			respondWithError(ctx, http.StatusNotFound, "Vet or slots not found")
+			return
+		}
+
+		respondWithError(ctx, http.StatusInternalServerError, "Failed to retrieve available slots")
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"message": "Success",
-		"data":    slots,
-	})
+	ctx.JSON(http.StatusOK, slots)
 }
 
 // =====================================================================
 // 👩‍💻 พื้นที่ของ: ไตเติ้ล (POST /api/vets/:id/slots)
 // =====================================================================
 func (c *SlotController) AddSlot(ctx *gin.Context) {
-
+	// (เว้นไว้ให้ไตเติ้ลทำต่อ)
 }
