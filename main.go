@@ -38,9 +38,15 @@ func main() {
 	r := gin.Default()
 
 	//Routes
+<<<<<<< HEAD
 	r.POST("/api/login", authController.Login)
 	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
 	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
+=======
+	r.GET("/api/vets", vetController.GetAllVets)
+	r.GET("/api/vets/:id/slots", slotController.GetAvailableSlots)
+	r.GET("/api/slots", slotController.GetAllAvailableSlots)
+>>>>>>> Develop
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")
