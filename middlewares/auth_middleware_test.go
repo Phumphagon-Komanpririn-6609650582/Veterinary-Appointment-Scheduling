@@ -66,3 +66,18 @@ func TestRequireAuth_WrongFormat(t *testing.T) {
 
 	assert.Equal(t, 401, w.Code)
 }
+
+func TestRequireAuth_WrongSigningMethod(t *testing.T) {
+	// สร้าง Token ที่ใช้การเซ็นแบบอื่นที่ไม่ใช่ HS256 (เช่น RS256 หรือมั่วๆ)
+	token := jwt.New(jwt.SigningMethodNone)
+	tokenString, _ := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/", nil)
+	c.Request.Header.Set("Authorization", "Bearer "+tokenString)
+
+	RequireAuth(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}

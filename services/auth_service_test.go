@@ -38,3 +38,18 @@ func TestAuthService_Login_WrongPassword(t *testing.T) {
 	// ตรงนี้ actual จะกลายเป็น "รหัสผ่านไม่ถูกต้อง" แล้ว Coverage จะพุ่งครับ!
 	assert.Equal(t, "รหัสผ่านไม่ถูกต้อง", err.Error())
 }
+
+func TestAuthService_Login_UserNotFound(t *testing.T) {
+	// --- 1. ต้องประกาศพวกนี้ใหม่ในทุกฟังก์ชันที่ต้องการใช้ service ---
+	db, _ := sql.Open("sqlite3", "../veterinary.db")
+	defer db.Close()
+
+	repo := repositories.NewAuthRepository(db)
+	service := NewAuthService(repo) // บรรทัดนี้แหละที่จะทำให้ตัวแดงหายไป!
+	// -----------------------------------------------------------
+
+	_, err := service.Login("user_ไม่มีในโลก", "123")
+
+	assert.Error(t, err)
+	assert.Equal(t, "ไม่พบชื่อผู้ใช้งานนี้ในระบบ", err.Error())
+}
