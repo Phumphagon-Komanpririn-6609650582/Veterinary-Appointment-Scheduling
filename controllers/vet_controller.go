@@ -1,18 +1,23 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
+	"veterinary-api/models"
 	"veterinary-api/repositories"
-	"veterinary-api/services"
 
 	"github.com/gin-gonic/gin"
 )
 
-type VetController struct {
-	Service *services.VetService
+type IVetService interface {
+	GetAllVets() ([]models.User, error)
 }
 
-func NewVetController(service *services.VetService) *VetController {
+type VetController struct {
+	Service IVetService
+}
+
+func NewVetController(service IVetService) *VetController {
 	return &VetController{Service: service}
 }
 
@@ -23,7 +28,7 @@ func (c *VetController) GetAllVets(ctx *gin.Context) {
 	vets, err := c.Service.GetAllVets()
 	if err != nil {
 
-		if err == repositories.ErrNotFound {
+		if errors.Is(err, repositories.ErrNotFound) {
 			respondWithError(ctx, http.StatusNotFound, "Veterinarians not found")
 			return
 		}

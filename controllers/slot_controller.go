@@ -2,22 +2,19 @@ package controllers
 
 import (
 	"net/http"
-	"veterinary-api/models" // 🔥 ต้อง import models เพราะเราจะทำ Interface
+	"veterinary-api/models"
 	"veterinary-api/repositories"
 
 	"github.com/gin-gonic/gin"
 )
 
-// =====================================================================
-// 🔥 ทริค Tech Lead: สร้าง Interface ฝั่ง Controller เองเลย!
-// =====================================================================
 type ISlotService interface {
 	GetAvailableSlots(vetID string) ([]models.Slot, error)
 	GetAllAvailableSlots() ([]models.Slot, error)
 }
 
 type SlotController struct {
-	Service ISlotService // 🔥 เปลี่ยนมารับ Interface ของเราเอง
+	Service ISlotService
 }
 
 func NewSlotController(service ISlotService) *SlotController {
@@ -57,7 +54,7 @@ func (c *SlotController) AddSlot(ctx *gin.Context) {
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: ภูมิ (GET /api/vets/:id/slots)
+// 👨‍💻 พื้นที่ของ: ภูมิ (GET /api/slots)
 // =====================================================================
 func (c *SlotController) GetAllAvailableSlots(ctx *gin.Context) {
 	slots, err := c.Service.GetAllAvailableSlots()
