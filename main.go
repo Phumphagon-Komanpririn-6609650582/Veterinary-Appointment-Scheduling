@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"veterinary-api/controllers"
+	"veterinary-api/middlewares"
 	"veterinary-api/repositories"
 	"veterinary-api/services"
 
@@ -19,6 +20,10 @@ func main() {
 	}
 	defer db.Close()
 
+	authRepo := repositories.NewAuthRepository(db)
+	authService := services.NewAuthService(authRepo)
+	authController := controllers.NewAuthController(authService)
+
 	//Vet-API
 	vetRepo := repositories.NewVetRepository(db)
 	vetService := services.NewVetService(vetRepo)
@@ -33,8 +38,9 @@ func main() {
 	r := gin.Default()
 
 	//Routes
-	r.GET("/api/vets", vetController.GetAllVets)
-	r.GET("/api/vets/:id/slots", slotController.GetAvailableSlots)
+	r.POST("/api/login", authController.Login)
+	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
+	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")

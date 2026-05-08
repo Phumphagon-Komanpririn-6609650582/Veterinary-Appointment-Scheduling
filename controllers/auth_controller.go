@@ -18,7 +18,31 @@ func NewAuthController(service *services.AuthService) *AuthController {
 // 👨‍💻 พื้นที่ของ: เอล์ฟ (POST /api/auth/login)
 // =====================================================================
 func (c *AuthController) Login(ctx *gin.Context) {
+	var loginReq struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
 
+	// 1. ตรวจสอบว่าส่งข้อมูลมาครบไหม
+	if err := ctx.ShouldBindJSON(&loginReq); err != nil {
+		ctx.JSON(400, gin.H{"error": "กรุณากรอก Username และ Password"})
+		return
+	}
+
+	// 2. เรียก Service เพื่อยืนยันตัวตนและขอ Token
+	// (สมมติว่าใน AuthService มีฟังก์ชัน Login ที่คืนค่า token และ error)
+	token, err := c.Service.Login(loginReq.Username, loginReq.Password)
+	if err != nil {
+		// ถ้ารหัสผิด หรือหา user ไม่เจอ ให้ตอบกลับแบบกั๊กๆ ไว้เพื่อความปลอดภัย
+		ctx.JSON(401, gin.H{"error": "Username หรือ Password ไม่ถูกต้อง"})
+		return
+	}
+
+	// 3. ส่ง "บัตรพนักงาน" กลับไปให้ User
+	ctx.JSON(200, gin.H{
+		"message": "เข้าสู่ระบบสำเร็จ",
+		"token":   token,
+	})
 }
 
 // =====================================================================
