@@ -9,12 +9,12 @@ import (
 )
 
 // ใช้ Secret Key เดียวกันกับใน AuthService
-var jwtSecret = []byte("cs367secretkey")
+var jwtSecret = []byte("your_super_secret_key_2026")
 
 func RequireAuth(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "ไม่มีสิทธิ์เข้าถึง: กรุณาส่ง Token มาด้วย"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Missing Authorization header"})
 		c.Abort()
 		return
 	}
@@ -22,7 +22,7 @@ func RequireAuth(c *gin.Context) {
 	// 2. ตรวจสอบรูปแบบ "Bearer <token>"
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "รูปแบบ Token ไม่ถูกต้อง (ต้องเป็น Bearer <token>)"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid token format"})
 		c.Abort()
 		return
 	}
@@ -40,7 +40,7 @@ func RequireAuth(c *gin.Context) {
 
 	// 4. ถ้า Token ปลอมหรือหมดอายุ
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "บัตรพนักงานปลอมหรือหมดอายุแล้ว"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid or expired token"})
 		c.Abort()
 		return
 	}
