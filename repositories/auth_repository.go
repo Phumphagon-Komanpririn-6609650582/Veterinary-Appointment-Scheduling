@@ -34,7 +34,7 @@ func (r *AuthRepository) FindByUsername(username string) (*models.User, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.New("ไม่พบชื่อผู้ใช้งานนี้")
+			return nil, errors.New("This username was not found.")
 		}
 		return nil, err
 	}

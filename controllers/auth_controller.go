@@ -25,7 +25,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	// 1. ตรวจสอบว่าส่งข้อมูลมาครบไหม
 	if err := ctx.ShouldBindJSON(&loginReq); err != nil {
-		ctx.JSON(400, gin.H{"error": "กรุณากรอก Username และ Password"})
+		ctx.JSON(400, gin.H{"error": "Please enter your Username and Password."})
 		return
 	}
 
@@ -34,13 +34,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	token, err := c.Service.Login(loginReq.Username, loginReq.Password)
 	if err != nil {
 		// ถ้ารหัสผิด หรือหา user ไม่เจอ ให้ตอบกลับแบบกั๊กๆ ไว้เพื่อความปลอดภัย
-		ctx.JSON(401, gin.H{"error": "Username หรือ Password ไม่ถูกต้อง"})
+		ctx.JSON(401, gin.H{"error": "The username or password is incorrect."})
 		return
 	}
 
 	// 3. ส่ง "บัตรพนักงาน" กลับไปให้ User
 	ctx.JSON(200, gin.H{
-		"message": "เข้าสู่ระบบสำเร็จ",
+		"message": "Login successful",
 		"token":   token,
 	})
 }

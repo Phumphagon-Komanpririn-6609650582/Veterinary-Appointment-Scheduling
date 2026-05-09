@@ -26,14 +26,14 @@ func (s *AuthService) Login(username, password string) (string, error) {
 	// 1. ค้นหา User จากฐานข้อมูลผ่าน Repo
 	user, err := s.Repo.FindByUsername(username)
 	if err != nil {
-		return "", errors.New("ไม่พบชื่อผู้ใช้งานนี้ในระบบ")
+		return "", errors.New("This username was not found in the system.")
 	}
 
 	// 2. ตรวจสอบรหัสผ่าน
 	// แก้ไข: เนื่องจากใน DB ของเอลฟ์เก็บเป็นค่าธรรมเนียม (123, 456)
 	// จึงต้องเทียบกันตรงๆ แบบนี้ไปก่อนครับ
 	if user.Password != password {
-		return "", errors.New("รหัสผ่านไม่ถูกต้อง")
+		return "", errors.New("The password is incorrect.")
 	}
 
 	// 3. เมื่อรหัสผ่านถูกต้อง -> สร้างบัตรพนักงาน (JWT Claims)
