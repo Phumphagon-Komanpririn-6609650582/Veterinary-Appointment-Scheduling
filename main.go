@@ -9,11 +9,12 @@ import (
 	"veterinary-api/services"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3" // Driver สำหรับต่อ SQLite
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	//เชื่อมต่อ SQLite
+
+	// เชื่อมต่อ SQLite
 	db, err := sql.Open("sqlite3", "veterinary.db")
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
@@ -28,31 +29,56 @@ func main() {
 	authService := services.NewAuthService(authRepo)
 	authController := controllers.NewAuthController(authService)
 
-	//Vet-API
+	// Vet API
 	vetRepo := repositories.NewVetRepository(db)
 	vetService := services.NewVetService(vetRepo)
 	vetController := controllers.NewVetController(vetService)
 
-	//Slots-API
+	// Slots API
 	slotRepo := repositories.NewSlotRepository(db)
 	slotService := services.NewSlotService(slotRepo)
 	slotController := controllers.NewSlotController(slotService)
 
-	//ตั้งค่า Gin Web Server
+	// ตั้งค่า Gin
 	r := gin.Default()
 
-	//Routes
+	// Routes
 	r.POST("/api/login", authController.Login)
-	r.POST("/api/logout", middlewares.RequireAuth, authController.Logout)
-	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
-	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
-	r.GET("/api/slots", middlewares.RequireAuth, slotController.GetAllAvailableSlots)
-	r.PUT("/api/appointments/:id", middlewares.RequireAuth, appointmentController.UpdateAppointment)
 
-	r.DELETE("/api/appointments/:id", middlewares.RequireAuth, appointmentController.CancelAppointment)
+	r.GET("/api/vets",
+		middlewares.RequireAuth,
+		vetController.GetAllVets,
+	)
 
+	r.GET("/api/vets/:id/slots",
+		middlewares.RequireAuth,
+		slotController.GetAvailableSlots,
+	)
 
-	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
+	r.GET("/api/slots",
+		middlewares.RequireAuth,
+		slotController.GetAllAvailableSlots,
+	)
+
+	// =========================
+	// CREATE APPOINTMENT (ของปลา)
+	// =========================
+	r.POST("/api/appointments",
+		middlewares.RequireAuth,
+		appointmentController.CreateAppointment,
+	)
+
+	r.PUT("/api/appointments/:id",
+		middlewares.RequireAuth,
+		appointmentController.UpdateAppointment,
+	)
+
+	r.DELETE("/api/appointments/:id",
+		middlewares.RequireAuth,
+		appointmentController.CancelAppointment,
+	)
+
+	// รันเซิร์ฟเวอร์
 	log.Println("Server is running on http://localhost:8080")
 	r.Run(":8080")
 }

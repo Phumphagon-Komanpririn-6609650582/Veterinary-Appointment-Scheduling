@@ -148,3 +148,151 @@ func TestAppointmentController_UpdateAppointment_Mock(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "Failed to update appointment")
 	})
 }
+
+// =====================================================================
+// 👩‍💻 พื้นที่ของ: ปลา (POST /api/appointments)
+// =====================================================================
+
+func TestAppointmentController_CreateAppointment_Mock(t *testing.T) {
+
+	gin.SetMode(gin.TestMode)
+
+	// =====================================================
+	// Create Success
+	// =====================================================
+	t.Run("Create_Success", func(t *testing.T) {
+
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		mockService.On(
+			"CreateAppointment",
+			mock.AnythingOfType("*models.Appointment"),
+		).Return(nil)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		jsonBody := `{
+			"slot_id": "S-001",
+			"pet_name": "Lucky",
+			"pet_type": "Dog",
+			"client_name": "ปลา",
+			"reason": "ตรวจสุขภาพ"
+		}`
+
+		c.Request, _ = http.NewRequest(
+			"POST",
+			"/api/appointments",
+			strings.NewReader(jsonBody),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.CreateAppointment(c)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		assert.Contains(t, w.Body.String(), "appointment created successfully")
+
+		mockService.AssertExpectations(t)
+	})
+
+	// =====================================================
+	// Create Fail from Service
+	// =====================================================
+	t.Run("Create_Fail_Service_Error", func(t *testing.T) {
+
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		errMsg := "slot is full"
+
+		mockService.On(
+			"CreateAppointment",
+			mock.AnythingOfType("*models.Appointment"),
+		).Return(errors.New(errMsg))
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		jsonBody := `{
+			"slot_id": "S-002",
+			"pet_name": "Lucky",
+			"pet_type": "Dog",
+			"client_name": "ปลา",
+			"reason": "ตรวจสุขภาพ"
+		}`
+
+		c.Request, _ = http.NewRequest(
+			"POST",
+			"/api/appointments",
+			strings.NewReader(jsonBody),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.CreateAppointment(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), errMsg)
+
+		mockService.AssertExpectations(t)
+	})
+
+	// =====================================================
+	// Invalid JSON
+	// =====================================================
+	t.Run("Create_Invalid_JSON", func(t *testing.T) {
+
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		invalidJson := `{
+			"slot_id": "S-001",
+			"pet_name": "Lucky"
+		`
+
+		c.Request, _ = http.NewRequest(
+			"POST",
+			"/api/appointments",
+			strings.NewReader(invalidJson),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.CreateAppointment(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+		// ตรงกับ controller จริง
+		assert.Contains(t, w.Body.String(), "invalid request data")
+	})
+
+	// =====================================================
+	// Empty Body
+	// =====================================================
+	t.Run("Create_Empty_Body", func(t *testing.T) {
+
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		c.Request, _ = http.NewRequest(
+			"POST",
+			"/api/appointments",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.CreateAppointment(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "invalid request data")
+	})
+}

@@ -21,7 +21,35 @@ func NewAppointmentController(service services.IAppointmentService) *Appointment
 // 👩‍💻 พื้นที่ของ: ปลา (POST /api/appointments)
 // =====================================================================
 func (c *AppointmentController) CreateAppointment(ctx *gin.Context) {
-	
+
+	var appointment models.Appointment
+
+	// รับ JSON
+	if err := ctx.ShouldBindJSON(&appointment); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "invalid request data",
+		})
+		return
+	}
+
+	// เรียก service
+	err := c.Service.CreateAppointment(&appointment)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// success
+	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
+		"message": "appointment created successfully",
+		"data":    appointment,
+	})
 }
 
 // =====================================================================
@@ -80,12 +108,12 @@ func (ctrl *AppointmentController) CancelAppointment(c *gin.Context) {
 // 👨‍💻 พื้นที่ของ: พี่สิรภพ (GET /api/appointments)
 // =====================================================================
 func (c *AppointmentController) GetAppointments(ctx *gin.Context) {
-	
+
 }
 
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (PATCH /api/appointments/:id/status)
 // =====================================================================
 func (c *AppointmentController) UpdateStatus(ctx *gin.Context) {
-	
+
 }

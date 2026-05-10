@@ -11,8 +11,8 @@ type IAppointmentService interface {
 	CreateAppointment(app *models.Appointment) error
 	UpdateAppointment(app models.Appointment) error
 	CancelAppointment(id string) error
-	GetAppointments() ([]models.Appointment, error) 
-	UpdateStatus(id string, status string) error    
+	GetAppointments() ([]models.Appointment, error)
+	UpdateStatus(id string, status string) error
 }
 
 type AppointmentService struct {
@@ -27,12 +27,60 @@ func NewAppointmentService(repo *repositories.AppointmentRepository) IAppointmen
 // 👩‍💻 พื้นที่ของ: ปลา
 // =====================================================================
 func (s *AppointmentService) CreateAppointment(app *models.Appointment) error {
-    // ต้องรับพารามิเตอร์ให้ตรงกับ Interface
-    return nil 
+
+	// เช็กชื่อสัตว์
+	if app.PetName == "" {
+		return errors.New("pet name is required")
+	}
+
+	// เช็กประเภทสัตว์
+	if app.PetType == "" {
+		return errors.New("pet type is required")
+	}
+
+	// เช็กชื่อเจ้าของ
+	if app.ClientName == "" {
+		return errors.New("client name is required")
+	}
+
+	// เช็กเหตุผลการนัด
+	if app.Reason == "" {
+		return errors.New("reason is required")
+	}
+
+	// เช็ก slot
+	if app.SlotID == "" {
+		return errors.New("slot id is required")
+	}
+
+	// เช็กว่า slot มีจริงไหม
+	if !s.Repo.CheckSlotExists(app.SlotID) {
+		return errors.New("slot not found")
+	}
+
+	// ถ้า slot เต็ม
+	err := s.Repo.DecreaseSlotLimit(app.SlotID)
+	if err != nil {
+		return err
+	}
+
+	// ถ้าไม่ส่ง status มา
+	if app.Status == "" {
+		app.Status = "in-progress"
+	}
+
+	// บันทึกลง database
+	err = s.Repo.CreateAppointment(app)
+
+	if err != nil {
+		return errors.New("failed to create appointment")
+	}
+
+	return nil
 }
 
 // =====================================================================
-// 👩‍💻 พื้นที่ของ: นุช 
+// 👩‍💻 พื้นที่ของ: นุช
 // =====================================================================
 func (s *AppointmentService) UpdateAppointment(app models.Appointment) error {
 	oldApp, err := s.Repo.GetByID(app.ID)
@@ -48,7 +96,7 @@ func (s *AppointmentService) UpdateAppointment(app models.Appointment) error {
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: เอลฟ์ 
+// 👨‍💻 พื้นที่ของ: เอลฟ์
 // =====================================================================
 func (s *AppointmentService) CancelAppointment(id string) error {
 	app, err := s.Repo.GetByID(id)
@@ -69,17 +117,17 @@ func (s *AppointmentService) CancelAppointment(id string) error {
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่สิรภพ 
+// 👨‍💻 พื้นที่ของ: พี่สิรภพ
 // =====================================================================
 func (s *AppointmentService) GetAppointments() ([]models.Appointment, error) {
-    // ต้องคืนค่าให้ตรงกับ Interface
-    return nil, nil
+	// ต้องคืนค่าให้ตรงกับ Interface
+	return nil, nil
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ 
+// 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์
 // =====================================================================
 func (s *AppointmentService) UpdateStatus(id string, status string) error {
-    // ต้องรับพารามิเตอร์ให้ตรงกับ Interface
-    return nil
+	// ต้องรับพารามิเตอร์ให้ตรงกับ Interface
+	return nil
 }
