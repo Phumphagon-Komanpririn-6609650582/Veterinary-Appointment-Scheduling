@@ -36,7 +36,7 @@ func TestAuthService_Login_WrongPassword(t *testing.T) {
 
 	assert.Error(t, err)
 	// ตรงนี้ actual จะกลายเป็น "รหัสผ่านไม่ถูกต้อง" แล้ว Coverage จะพุ่งครับ!
-	assert.Equal(t, "รหัสผ่านไม่ถูกต้อง", err.Error())
+	assert.Equal(t, "The password is incorrect.", err.Error())
 }
 
 func TestAuthService_Login_UserNotFound(t *testing.T) {
@@ -48,8 +48,8 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 	service := NewAuthService(repo) // บรรทัดนี้แหละที่จะทำให้ตัวแดงหายไป!
 	// -----------------------------------------------------------
 
-	_, err := service.Login("user_ไม่มีในโลก", "123")
+	_, err := service.Login("user_67667", "123")
 
 	assert.Error(t, err)
-	assert.Equal(t, "ไม่พบชื่อผู้ใช้งานนี้ในระบบ", err.Error())
+	assert.Equal(t, "This username was not found in the system.", err.Error())
 }
