@@ -20,6 +20,10 @@ func main() {
 	}
 	defer db.Close()
 
+	appointmentRepo := repositories.NewAppointmentRepository(db)
+	appointmentService := services.NewAppointmentService(appointmentRepo)
+	appointmentController := controllers.NewAppointmentController(appointmentService)
+
 	authRepo := repositories.NewAuthRepository(db)
 	authService := services.NewAuthService(authRepo)
 	authController := controllers.NewAuthController(authService)
@@ -42,6 +46,7 @@ func main() {
 	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
 	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
 	r.GET("/api/slots", middlewares.RequireAuth, slotController.GetAllAvailableSlots)
+	r.DELETE("/api/appointments/:id", middlewares.RequireAuth, appointmentController.CancelAppointment)
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")
