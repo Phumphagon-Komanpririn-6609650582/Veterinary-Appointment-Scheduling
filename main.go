@@ -43,6 +43,7 @@ func main() {
 
 	//Routes
 	r.POST("/api/login", authController.Login)
+	r.POST("/api/logout", middlewares.RequireAuth, authController.Logout)
 	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
 	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
 	r.GET("/api/slots", middlewares.RequireAuth, slotController.GetAllAvailableSlots)
