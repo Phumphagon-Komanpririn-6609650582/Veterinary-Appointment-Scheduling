@@ -55,8 +55,75 @@ func (r *AppointmentRepository) GetByID(id string) (*models.Appointment, error) 
 // =====================================================================
 // 👩‍💻 พื้นที่ของ: ปลา (Insert นัดใหม่)
 // =====================================================================
-func (r *AppointmentRepository) CreateAppointment() {
+func (r *AppointmentRepository) CreateAppointment(app *models.Appointment) error {
 
+	query := `
+		INSERT INTO appointments (
+			slot_id,
+			pet_name,
+			pet_type,
+			client_name,
+			reason,
+			status
+		)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`
+
+	_, err := r.DB.Exec(
+		query,
+		app.SlotID,
+		app.PetName,
+		app.PetType,
+		app.ClientName,
+		app.Reason,
+		app.Status,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// เช็กว่า slot มีอยู่จริงไหม
+func (r *AppointmentRepository) CheckSlotExists(slotID string) bool {
+
+	query := `SELECT COUNT(*) FROM slots WHERE id = ?`
+
+	var count int
+
+	err := r.DB.QueryRow(query, slotID).Scan(&count)
+
+	if err != nil {
+		return false
+	}
+
+	return count > 0
+}
+
+// ลดจำนวน slot หลังจองสำเร็จ
+func (r *AppointmentRepository) DecreaseSlotLimit(slotID string) error {
+
+	query := `
+		UPDATE slots
+		SET slot_limit = slot_limit - 1
+		WHERE id = ? AND slot_limit > 0
+	`
+
+	result, err := r.DB.Exec(query, slotID)
+
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+
+	if rows == 0 {
+		return errors.New("slot is full")
+	}
+
+	return nil
 }
 
 // =====================================================================
@@ -64,7 +131,7 @@ func (r *AppointmentRepository) CreateAppointment() {
 // =====================================================================
 func (r *AppointmentRepository) UpdateAppointment(app models.Appointment) error {
 
-    query := `
+	query := `
 		UPDATE appointments
 SET
     slot_id = ?,
@@ -73,28 +140,27 @@ SET
     client_name = ?,
     reason = ?
 WHERE id = ?`
-    
 
-    result, err := r.DB.Exec(
-        query,
-        app.SlotID,
-        app.PetName,
-        app.PetType,
-        app.ClientName,
-        app.Reason,
-        app.ID,
-    )
+	result, err := r.DB.Exec(
+		query,
+		app.SlotID,
+		app.PetName,
+		app.PetType,
+		app.ClientName,
+		app.Reason,
+		app.ID,
+	)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    rows, _ := result.RowsAffected()
-    if rows == 0 {
-        return errors.New("appointment not found")
-    }
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("appointment not found")
+	}
 
-    return nil
+	return nil
 }
 
 // =====================================================================
