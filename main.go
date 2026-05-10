@@ -46,7 +46,10 @@ func main() {
 	r.GET("/api/vets", middlewares.RequireAuth, vetController.GetAllVets)
 	r.GET("/api/vets/:id/slots", middlewares.RequireAuth, slotController.GetAvailableSlots)
 	r.GET("/api/slots", middlewares.RequireAuth, slotController.GetAllAvailableSlots)
+	r.PUT("/api/appointments/:id", middlewares.RequireAuth, appointmentController.UpdateAppointment)
+
 	r.DELETE("/api/appointments/:id", middlewares.RequireAuth, appointmentController.CancelAppointment)
+
 
 	//รันเซิร์ฟเวอร์ที่พอร์ต 8080
 	log.Println("Server is running on http://localhost:8080")

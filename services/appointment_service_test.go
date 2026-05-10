@@ -3,90 +3,109 @@ package services
 import (
 	"database/sql"
 	"testing"
-	"veterinary-api/repositories" // import repo เข้ามาด้วย
+	"veterinary-api/models"
+	"veterinary-api/repositories"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAppointmentService_CancelAppointment_Complete(t *testing.T) {
-	db, _ := sql.Open("sqlite3", "../veterinary.db")
+// =====================================================================
+// 👨‍💻 พื้นที่ของ: เอลฟ์ (Test CancelAppointment)
+// =====================================================================
+func TestAppointmentService_CancelAppointment(t *testing.T) {
+	db, _ := sql.Open("sqlite3", ":memory:")
+	defer db.Close()
+
+	db.Exec(`CREATE TABLE slots (id TEXT PRIMARY KEY, date TEXT, time_period TEXT);`)
+	db.Exec(`CREATE TABLE appointments (id TEXT PRIMARY KEY, slot_id TEXT, pet_name TEXT, pet_type TEXT, client_name TEXT, reason TEXT, status TEXT);`)
+
+	// ใส่ข้อมูลให้ครบทุกคอลัมน์ กัน Error NULL ตอนดึงข้อมูล (GetByID)
+	db.Exec(`INSERT INTO slots (id, date, time_period) VALUES ('S-003', '2099-12-31', '10:00-11:00');`)
+	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) VALUES ('A-003', 'S-003', '-', '-', '-', '-', 'pending');`)
+
+	db.Exec(`INSERT INTO slots (id, date, time_period) VALUES ('S-002', '2020-01-01', '10:00-11:00');`)
+	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) VALUES ('A-002', 'S-002', '-', '-', '-', '-', 'pending');`)
+
+	db.Exec(`INSERT INTO slots (id, date, time_period) VALUES ('S-001', '2099-12-31', '10:00-11:00');`)
+	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) VALUES ('A-001', 'S-001', '-', '-', '-', '-', 'cancelled');`)
+
 	repo := repositories.NewAppointmentRepository(db)
 	service := NewAppointmentService(repo)
 
-	// 1. เคส: ยกเลิกไม่ทัน (น้อยกว่า 2 ชม.)
-	t.Run("Cancel_TooLate_Error", func(t *testing.T) {
-		err := service.CancelAppointment("A-002") // มั่นใจว่า A-002 ใน DB เวลากระชั้นชิด
-		assert.Error(t, err)
-		// แก้ภาษาให้ตรงกับโค้ด Service ของเอลฟ์
-		assert.Contains(t, err.Error(), "at least 2 hours in advance")
-	})
-
-	// 2. เคส: ยกเลิกสำเร็จ (ต้องหา ID ที่เวลาห่างๆ และสถานะยังไม่เป็น cancelled)
 	t.Run("Cancel_Success", func(t *testing.T) {
-		// แนะนำ: ไปแก้ A-003 ใน DB ให้เป็นปีหน้า และสถานะเป็น 'pending'
 		err := service.CancelAppointment("A-003")
 		assert.NoError(t, err)
 	})
 
-	// 3. เคส: หา ID ไม่เจอ
+	t.Run("Cancel_TooLate_Error", func(t *testing.T) {
+		err := service.CancelAppointment("A-002")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "at least 2 hours in advance")
+	})
+
 	t.Run("Error_NotFound", func(t *testing.T) {
 		err := service.CancelAppointment("NON-EXISTENT-ID")
 		assert.Error(t, err)
 		assert.Equal(t, "This appointment was not found in the system.", err.Error())
 	})
 
-	// 4. เคส: ยกเลิกซ้ำ
 	t.Run("Error_AlreadyCancelled", func(t *testing.T) {
-		// ใช้ ID ที่เรารู้แน่ๆ ว่าเป็น cancelled (เช่น A-001 ที่ยกเลิกไปแล้ว)
 		err := service.CancelAppointment("A-001")
 		assert.Error(t, err)
 		assert.Equal(t, "This appointment has been cancelled.", err.Error())
 	})
 }
 
-// เพิ่มใน services/appointment_service_test.go
+// =====================================================================
+// 👩‍💻 พื้นที่ของ: นุช (Test UpdateAppointment)
+// =====================================================================
+func TestAppointmentService_UpdateAppointment(t *testing.T) {
+	db, _ := sql.Open("sqlite3", ":memory:")
+	defer db.Close()
 
-func TestAppointmentService_CancelAppointment_EdgeCases(t *testing.T) {
-	db, _ := sql.Open("sqlite3", "../veterinary.db")
+	db.Exec(`CREATE TABLE slots (id TEXT PRIMARY KEY, date TEXT, time_period TEXT);`)
+	db.Exec(`CREATE TABLE appointments (id TEXT PRIMARY KEY, slot_id TEXT, pet_name TEXT, pet_type TEXT, client_name TEXT, reason TEXT, status TEXT);`)
+
+	db.Exec(`INSERT INTO slots (id, date, time_period) VALUES ('S-001', '2099-12-31', '10:00-11:00');`)
+	
+	// เคสปกติ (ใส่ให้ครบทุกคอลัมน์)
+	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) VALUES ('A-004', 'S-001', '-', '-', '-', '-', 'pending');`) 
+	// เคสโดนยกเลิก (ใส่ให้ครบทุกคอลัมน์)
+	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) VALUES ('A-001', 'S-001', '-', '-', '-', '-', 'cancelled');`) 
+
 	repo := repositories.NewAppointmentRepository(db)
 	service := NewAppointmentService(repo)
 
-	t.Run("Error_AppointmentNotFound", func(t *testing.T) {
-		// ส่ง ID มั่วๆ ที่ไม่มีใน DB
-		err := service.CancelAppointment("NON-EXISTENT-ID")
-		assert.Error(t, err)
-		assert.Equal(t, "This appointment was not found in the system.", err.Error())
+	// เคสที่ 1: อัปเดตสำเร็จ
+	t.Run("Update_Success", func(t *testing.T) {
+		appToUpdate := models.Appointment{
+			ID:         "A-004", 
+			SlotID:     "S-002",
+			PetName:    "น้องด่าง",
+			PetType:    "Dog",
+			ClientName: "คุณนุช",
+			Reason:     "อาบน้ำตัดขน",
+		}
+		err := service.UpdateAppointment(appToUpdate)
+		assert.NoError(t, err)
 	})
 
-	t.Run("Error_AlreadyCancelled", func(t *testing.T) {
-		// ต้องมั่นใจว่าใน DB มี ID นี้และ status เป็น 'cancelled' อยู่แล้ว
-		// สมมติเป็น ID A-001 ที่เอลฟ์เพิ่งรัน Test Success ไปก่อนหน้า
-		err := service.CancelAppointment("A-001")
-
-		// ถ้า Logic เช็ค status ของเอลฟ์ทำงาน บรรทัดสีแดงจะเขียวทันที
+	// เคสที่ 2: หา ID ไม่เจอในระบบ
+	t.Run("Update_Fail_NotFound", func(t *testing.T) {
+		appToUpdate := models.Appointment{ID: "ID-HAVE-NOT"} 
+		err := service.UpdateAppointment(appToUpdate)
+		
 		assert.Error(t, err)
-		assert.Equal(t, "This appointment has been cancelled.", err.Error())
-	})
-}
-
-func TestAppointmentService_Cancel_Errors(t *testing.T) {
-	db, _ := sql.Open("sqlite3", "../veterinary.db")
-	repo := repositories.NewAppointmentRepository(db)
-	service := NewAppointmentService(repo)
-
-	t.Run("Error_NotFound", func(t *testing.T) {
-		// 1. ส่ง ID ที่ไม่มีใน DB เพื่อให้ GetByID คืนค่า error (จะทำให้บรรทัดแดงแรกเขียว)
-		err := service.CancelAppointment("NON-EXIST-ID")
-		assert.Error(t, err)
-		assert.Equal(t, "This appointment was not found in the system.", err.Error())
+		assert.Equal(t, "appointment not found", err.Error())
 	})
 
-	t.Run("Error_AlreadyCancelled", func(t *testing.T) {
-		// 2. ส่ง ID ที่สถานะเป็น 'cancelled' อยู่แล้ว (จะทำให้บรรทัดแดงที่สองเขียว)
-		// **ต้องมั่นใจว่าใน DB ของเอลฟ์มี ID A-001 ที่ status='cancelled' แล้วนะ
-		err := service.CancelAppointment("A-001")
+	// เคสที่ 3: ห้ามแก้ไขคิวที่โดนยกเลิกไปแล้ว
+	t.Run("Update_Fail_Cancelled", func(t *testing.T) {
+		appToUpdate := models.Appointment{ID: "A-001"} 
+		err := service.UpdateAppointment(appToUpdate)
+		
 		assert.Error(t, err)
-		assert.Equal(t, "This appointment has been cancelled.", err.Error())
+		assert.Equal(t, "cannot edit cancelled appointment", err.Error())
 	})
 }

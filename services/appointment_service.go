@@ -3,42 +3,59 @@ package services
 import (
 	"errors"
 	"time"
+	"veterinary-api/models"
 	"veterinary-api/repositories"
 )
+
+type IAppointmentService interface {
+	CreateAppointment(app *models.Appointment) error
+	UpdateAppointment(app models.Appointment) error
+	CancelAppointment(id string) error
+	GetAppointments() ([]models.Appointment, error) 
+	UpdateStatus(id string, status string) error    
+}
 
 type AppointmentService struct {
 	Repo *repositories.AppointmentRepository
 }
 
-func NewAppointmentService(repo *repositories.AppointmentRepository) *AppointmentService {
+func NewAppointmentService(repo *repositories.AppointmentRepository) IAppointmentService {
 	return &AppointmentService{Repo: repo}
 }
 
 // =====================================================================
-// 👩‍💻 พื้นที่ของ: ปลา (เช็ก Slot Limit ก่อนสร้างนัด)
+// 👩‍💻 พื้นที่ของ: ปลา
 // =====================================================================
-func (s *AppointmentService) CreateAppointment() {
-
+func (s *AppointmentService) CreateAppointment(app *models.Appointment) error {
+    // ต้องรับพารามิเตอร์ให้ตรงกับ Interface
+    return nil 
 }
 
 // =====================================================================
-// 👩‍💻 พื้นที่ของ: นุช (ตรวจสอบความถูกต้องก่อนแก้ข้อมูล)
+// 👩‍💻 พื้นที่ของ: นุช 
 // =====================================================================
-func (s *AppointmentService) UpdateAppointment() {
+func (s *AppointmentService) UpdateAppointment(app models.Appointment) error {
+	oldApp, err := s.Repo.GetByID(app.ID)
+	if err != nil {
+		return errors.New("appointment not found")
+	}
 
+	if oldApp.Status == "cancelled" {
+		return errors.New("cannot edit cancelled appointment")
+	}
+
+	return s.Repo.UpdateAppointment(app)
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: เอลฟ์ (เช็กเงื่อนไข ต้องยกเลิกก่อน 2 ชั่วโมง)
+// 👨‍💻 พื้นที่ของ: เอลฟ์ 
 // =====================================================================
 func (s *AppointmentService) CancelAppointment(id string) error {
-	// 1. ดึงข้อมูลมาเช็คเวลา
 	app, err := s.Repo.GetByID(id)
 	if err != nil {
 		return errors.New("This appointment was not found in the system.")
 	}
 
-	// 2. Logic เช็ค 2 ชม.
 	diff := time.Until(app.AppointmentTime)
 	if diff < 2*time.Hour {
 		return errors.New("This cannot be canceled as it must be canceled at least 2 hours in advance.")
@@ -48,20 +65,21 @@ func (s *AppointmentService) CancelAppointment(id string) error {
 		return errors.New("This appointment has been cancelled.")
 	}
 
-	// 3. ถ้าผ่านเงื่อนไข ค่อยสั่ง Repo ให้ทำงาน
-	return s.Repo.CancelAppointment(id) // เรียกชื่อเดียวกันแต่คนละหน้าที่
+	return s.Repo.CancelAppointment(id)
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่สิรภพ (กรองรายการนัดหมายตามวัน/ชื่อหมอ)
+// 👨‍💻 พื้นที่ของ: พี่สิรภพ 
 // =====================================================================
-func (s *AppointmentService) GetAppointments() {
-
+func (s *AppointmentService) GetAppointments() ([]models.Appointment, error) {
+    // ต้องคืนค่าให้ตรงกับ Interface
+    return nil, nil
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (อัปเดตสถานะ done/in-progress/cancelled)
+// 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ 
 // =====================================================================
-func (s *AppointmentService) UpdateStatus() {
-
+func (s *AppointmentService) UpdateStatus(id string, status string) error {
+    // ต้องรับพารามิเตอร์ให้ตรงกับ Interface
+    return nil
 }
