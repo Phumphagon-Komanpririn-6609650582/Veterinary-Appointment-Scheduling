@@ -62,8 +62,39 @@ func (r *AppointmentRepository) CreateAppointment() {
 // =====================================================================
 // 👩‍💻 พื้นที่ของ: นุช (อัปเดตข้อมูลนัดหมาย)
 // =====================================================================
-func (r *AppointmentRepository) UpdateAppointment() {
+func (r *AppointmentRepository) UpdateAppointment(app models.Appointment) error {
 
+    query := `
+		UPDATE appointments
+SET
+    slot_id = ?,
+    pet_name = ?,
+    pet_type = ?,
+    client_name = ?,
+    reason = ?
+WHERE id = ?`
+    
+
+    result, err := r.DB.Exec(
+        query,
+        app.SlotID,
+        app.PetName,
+        app.PetType,
+        app.ClientName,
+        app.Reason,
+        app.ID,
+    )
+
+    if err != nil {
+        return err
+    }
+
+    rows, _ := result.RowsAffected()
+    if rows == 0 {
+        return errors.New("appointment not found")
+    }
+
+    return nil
 }
 
 // =====================================================================
