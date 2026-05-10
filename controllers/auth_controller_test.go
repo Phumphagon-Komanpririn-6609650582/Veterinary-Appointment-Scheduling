@@ -101,3 +101,32 @@ func TestLoginController_Unauthorized(t *testing.T) {
 
 	assert.Equal(t, 401, w.Code)
 }
+
+func TestLogoutController_Success(t *testing.T) {
+	// 1. Setup
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	db, _ := sql.Open("sqlite3", "../veterinary.db")
+	defer db.Close()
+	authRepo := repositories.NewAuthRepository(db)
+	authService := services.NewAuthService(authRepo)
+	authController := NewAuthController(authService)
+
+	// 2. Register route (with a mock middleware to simulate authentication)
+	r.POST("/logout", func(c *gin.Context) {
+		c.Set("id", "A-001")
+		c.Next()
+	}, authController.Logout)
+
+	// 3. Send Request
+	req, _ := http.NewRequest("POST", "/logout", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 4. Assert
+	assert.Equal(t, http.StatusOK, w.Code)
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.Equal(t, "Logout successful. Please clear your token.", response["message"])
+}

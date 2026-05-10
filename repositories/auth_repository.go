@@ -45,6 +45,7 @@ func (r *AuthRepository) FindByUsername(username string) (*models.User, error) {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (จัดการเรื่อง Logout เช่น อัปเดตสถานะ Token ใน DB ถ้ามี)
 // =====================================================================
-func (r *AuthRepository) Logout() {
-
+func (r *AuthRepository) Logout() error {
+	// หากในอนาคตมีการเพิ่มตาราง Token blacklist หรือ Session สามารถมาเพิ่มโค้ดตรงนี้
+	return nil
 }

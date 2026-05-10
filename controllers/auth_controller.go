@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"net/http"
 	"veterinary-api/services"
 
 	"github.com/gin-gonic/gin"
@@ -49,5 +50,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (POST /api/auth/logout)
 // =====================================================================
 func (c *AuthController) Logout(ctx *gin.Context) {
-
+	// เรียก Service เพื่อจัดการเรื่องการ Logout (เช่น เคลียร์ Session หรือ Token ใน DataBase)
+	err := c.Service.Logout()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Logout successful. Please clear your token.",
+	})
 }

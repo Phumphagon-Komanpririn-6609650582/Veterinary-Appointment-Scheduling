@@ -57,6 +57,6 @@ func (s *AuthService) Login(username, password string) (string, error) {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (จัดการเคลียร์ Session)
 // =====================================================================
-func (s *AuthService) Logout() {
-
+func (s *AuthService) Logout() error {
+	return s.Repo.Logout()
 }
