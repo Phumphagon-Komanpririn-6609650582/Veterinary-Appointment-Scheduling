@@ -296,3 +296,65 @@ func TestAppointmentController_CreateAppointment_Mock(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "invalid request data")
 	})
 }
+
+// =====================================================================
+// 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (PATCH /api/appointments/:id/status)
+// =====================================================================
+func TestAppointmentController_UpdateStatus_Mock(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("UpdateStatus_Success", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		mockService.On("UpdateStatus", "A-001", "done").Return(nil)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "id", Value: "A-001"}}
+		jsonBody := `{"status": "done"}`
+		c.Request, _ = http.NewRequest("PATCH", "/api/appointments/A-001/status", strings.NewReader(jsonBody))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.UpdateStatus(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), "appointment status updated successfully")
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("UpdateStatus_Fail_Invalid_Status", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		errMsg := "invalid status: must be 'done', 'in-progress', or 'cancelled'"
+		mockService.On("UpdateStatus", "A-001", "invalid-status").Return(errors.New(errMsg))
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "id", Value: "A-001"}}
+		jsonBody := `{"status": "invalid-status"}`
+		c.Request, _ = http.NewRequest("PATCH", "/api/appointments/A-001/status", strings.NewReader(jsonBody))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.UpdateStatus(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), errMsg)
+	})
+
+	t.Run("UpdateStatus_Fail_Missing_Status", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "id", Value: "A-001"}}
+		jsonBody := `{}` // Missing status
+		c.Request, _ = http.NewRequest("PATCH", "/api/appointments/A-001/status", strings.NewReader(jsonBody))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.UpdateStatus(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "status is required")
+	})
+}

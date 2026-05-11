@@ -45,6 +45,12 @@ func main() {
 	// Routes
 	r.POST("/api/login", authController.Login)
 
+	// LOGOUT
+	r.POST("/api/logout",
+		middlewares.RequireAuth,
+		authController.Logout,
+	)
+
 	r.GET("/api/vets",
 		middlewares.RequireAuth,
 		vetController.GetAllVets,
@@ -76,6 +82,12 @@ func main() {
 	r.DELETE("/api/appointments/:id",
 		middlewares.RequireAuth,
 		appointmentController.CancelAppointment,
+	)
+
+	// UPDATE STATUS (ของพี่อิทธิเชษฐ์)
+	r.PATCH("/api/appointments/:id/status",
+		middlewares.RequireAuth,
+		appointmentController.UpdateStatus,
 	)
 
 	// รันเซิร์ฟเวอร์
