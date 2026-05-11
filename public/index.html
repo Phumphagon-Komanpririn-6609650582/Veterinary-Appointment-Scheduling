@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบนัดหมายโรงพยาบาลสัตว์ v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Prompt', sans-serif; background-color: #fdf2f8; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex overflow-hidden">
+
+    <div id="login-view" class="w-full h-full flex items-center justify-center absolute z-50 bg-pink-50">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 border border-pink-100">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-paw text-4xl text-pink-500 mb-2"></i>
+                <h2 class="text-2xl font-bold text-gray-800">เข้าสู่ระบบ</h2>
+                <p class="text-gray-500 text-sm">โรงพยาบาลสัตว์ v2</p>
+            </div>
+            <div id="login-error" class="hidden bg-red-100 text-red-600 p-3 rounded-lg text-sm mb-4 text-center"></div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" id="username" required class="w-full px-4 py-2 border rounded-lg focus:ring-pink-500 focus:border-pink-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน (Password)</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2 border rounded-lg focus:ring-pink-500 focus:border-pink-500">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <aside id="sidebar" class="hidden w-64 bg-white shadow-xl h-full flex flex-col z-40">
+        <div class="p-6 border-b border-pink-100 flex items-center space-x-3">
+            <i class="fa-solid fa-paw text-2xl text-pink-500"></i>
+            <span class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500">Vet Clinic v2</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition text-left">
+                <i class="fa-solid fa-calendar-days w-5"></i> <span>ตารางนัดหมายรวม</span>
+            </button>
+            <button onclick="switchTab('create-appointment')" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition text-left">
+                <i class="fa-solid fa-notes-medical w-5"></i> <span>สร้างนัดหมายใหม่</span>
+            </button>
+            <button id="menu-add-slot" onclick="switchTab('add-slot')" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-pink-50 hover:text-pink-600 rounded-lg transition text-left hidden">
+                <i class="fa-solid fa-clock w-5"></i> <span>เพิ่มเวลาทำงานแพทย์</span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>ออกจากระบบ</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-content" class="hidden flex-1 p-8 overflow-y-auto">
+        
+        <div id="tab-dashboard" class="tab-content">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800"><i class="fa-solid fa-calendar-days text-pink-500 mr-2"></i>ตารางเวลาว่างทั้งหมด (Master Schedule)</h1>
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <button onclick="loadMasterSchedule()" class="mb-4 px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 text-sm font-semibold"><i class="fa-solid fa-rotate mr-1"></i> โหลดข้อมูลใหม่</button>
+                <div id="schedule-list" class="space-y-3">
+                    <p class="text-gray-500 text-center py-4">กำลังรอข้อมูล...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-create-appointment" class="tab-content hidden">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800"><i class="fa-solid fa-notes-medical text-purple-500 mr-2"></i>สร้างนัดหมายใหม่</h1>
+            <div class="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
+                <form id="appointment-form" onsubmit="handleCreateAppointment(event)">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อสัตว์เลี้ยง</label>
+                            <input type="text" id="app-petname" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทสัตว์</label>
+                            <select id="app-pettype" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="สุนัข">สุนัข</option>
+                                <option value="แมว">แมว</option>
+                                <option value="นก">นก</option>
+                                <option value="Exotic">Exotic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อเจ้าของ</label>
+                        <input type="text" id="app-clientname" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เหตุผลการนัดหมาย</label>
+                        <input type="text" id="app-reason" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รหัส Slot ID (ดูได้จากตารางรวม)</label>
+                        <input type="text" id="app-slotid" placeholder="เช่น S-1a2b3c" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <button type="submit" class="bg-purple-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-purple-600">บันทึกนัดหมาย</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="tab-add-slot" class="tab-content hidden">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800"><i class="fa-solid fa-clock text-blue-500 mr-2"></i>เพิ่มเวลาทำงานแพทย์</h1>
+            <div class="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
+                <form id="slot-form" onsubmit="handleAddSlot(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รหัสแพทย์ (Vet ID)</label>
+                        <input type="text" id="slot-vetid" placeholder="เช่น U-001" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">วันที่</label>
+                            <input type="date" id="slot-date" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ช่วงเวลา</label>
+                            <input type="text" id="slot-time" placeholder="เช่น 09:00-12:00" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนคิวสูงสุด</label>
+                        <input type="number" id="slot-limit" min="1" value="5" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600">เพิ่มเวลาแพทย์</button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // 📌 ตั้งค่า URL ของ Backend (ปรับแก้ให้ตรงกับ Port ที่ Go รันอยู่)
+        const API_BASE = "http://localhost:8080/api";
+        
+        // สถานะระบบ
+        let token = localStorage.getItem('token') || null;
+
+        // เช็คตอนโหลดหน้าเว็บว่ามี Token ไหม
+        window.onload = () => {
+            if (token) {
+                showDashboard();
+            }
+        };
+
+        // --- ระบบนำทาง (Router) ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            if(tabId === 'dashboard') loadMasterSchedule();
+        }
+
+        function showDashboard() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            
+            // ปลดล็อคเมนู "เพิ่มเวลา" ให้มองเห็นได้ (ในระบบจริงควรแกะ Role จาก Token เพื่อตรวจสอบ)
+            // สมมติว่าทุกคนที่เข้าได้เห็นเมนูนี้ก่อน เพื่อความง่ายในการเทส
+            document.getElementById('menu-add-slot').classList.remove('hidden'); 
+            
+            switchTab('dashboard');
+        }
+
+        // --- 1. ยิง API Login (พี่เอลฟ์) ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errDiv = document.getElementById('login-error');
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    errDiv.classList.add('hidden');
+                    showDashboard();
+                } else {
+                    errDiv.textContent = data.error || "ล็อกอินไม่สำเร็จ";
+                    errDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errDiv.textContent = "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาเช็ค Backend";
+                errDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            location.reload(); // รีเฟรชหน้าเพื่อกลับไปหน้า Login
+        }
+
+        // --- 2. ยิง API ดึงตารางรวม (ภูมิ/ภูมิภากร) ---
+        async function loadMasterSchedule() {
+            const listDiv = document.getElementById('schedule-list');
+            listDiv.innerHTML = '<p class="text-gray-500"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</p>';
+
+            try {
+                const res = await fetch(`${API_BASE}/slots`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if(res.status === 403) {
+                    listDiv.innerHTML = '<p class="text-red-500">คุณไม่มีสิทธิ์ดูหน้านี้ (เฉพาะ Assistant)</p>';
+                    return;
+                }
+
+                const slots = await res.json();
+                if (!slots || slots.length === 0) {
+                    listDiv.innerHTML = '<p class="text-gray-500">ไม่มีช่วงเวลาว่างในระบบ</p>';
+                    return;
+                }
+
+                listDiv.innerHTML = slots.map(s => `
+                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <p class="font-bold text-gray-800"><i class="fa-solid fa-user-doctor text-blue-400 mr-1"></i> ${s.vet_name} (ID: ${s.vet_id})</p>
+                            <p class="text-sm text-gray-600"><i class="fa-regular fa-calendar text-pink-400 mr-1"></i> ${s.date} | <i class="fa-regular fa-clock text-purple-400 mr-1"></i> ${s.time_period}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-xs font-bold mb-1 inline-block">รับได้: ${s.slot_limit} คิว</span>
+                            <p class="text-xs text-gray-400 mt-1">Slot ID: <span class="font-mono text-gray-600">${s.id}</span></p>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                listDiv.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+            }
+        }
+
+        // --- 3. ยิง API สร้างนัดหมาย (ปลา) ---
+        async function handleCreateAppointment(e) {
+            e.preventDefault();
+            
+            const payload = {
+                pet_name: document.getElementById('app-petname').value,
+                pet_type: document.getElementById('app-pettype').value,
+                client_name: document.getElementById('app-clientname').value,
+                reason: document.getElementById('app-reason').value,
+                slot_id: document.getElementById('app-slotid').value,
+                status: "in-progress"
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/appointments`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("สร้างนัดหมายสำเร็จ!");
+                    e.target.reset(); // ล้างฟอร์ม
+                    switchTab('dashboard'); // กลับไปหน้าตาราง
+                } else {
+                    alert(`ไม่สำเร็จ: ${data.message || data.error}`);
+                }
+            } catch (error) {
+                alert("เชื่อมต่อขัดข้อง");
+            }
+        }
+
+        // --- 4. ยิง API เพิ่มเวลา (ไตเติ้ล) ---
+        async function handleAddSlot(e) {
+            e.preventDefault();
+            const vetId = document.getElementById('slot-vetid').value;
+            
+            const payload = {
+                date: document.getElementById('slot-date').value,
+                time_period: document.getElementById('slot-time').value,
+                slot_limit: parseInt(document.getElementById('slot-limit').value)
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/vets/${vetId}/slots`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("เพิ่มเวลาสำเร็จ!");
+                    e.target.reset();
+                    switchTab('dashboard');
+                } else {
+                    alert(`ไม่สำเร็จ: ${data.message || data.error}`);
+                }
+            } catch (error) {
+                alert("เชื่อมต่อขัดข้อง");
+            }
+        }
+    </script>
+</body>
+</html> 

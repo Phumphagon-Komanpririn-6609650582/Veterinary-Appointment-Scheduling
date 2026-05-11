@@ -42,11 +42,15 @@ func main() {
 	// ตั้งค่า Gin
 	r := gin.Default()
 
-	// Routes
-	r.POST("/api/login", authController.Login)
+	r.StaticFile("/", "./public/index.html")
+	r.StaticFile("/index.html", "./public/index.html")
 
-	// LOGOUT
-	r.POST("/api/logout",
+	// ==========================================
+	// Routes (API)
+	// ==========================================
+	r.POST("/api/auth/login", authController.Login)
+
+	r.POST("/api/auth/logout",
 		middlewares.RequireAuth,
 		authController.Logout,
 	)
@@ -61,14 +65,16 @@ func main() {
 		slotController.GetAvailableSlots,
 	)
 
+	r.POST("/api/vets/:id/slots",
+		middlewares.RequireAuth,
+		slotController.AddSlot,
+	)
+
 	r.GET("/api/slots",
 		middlewares.RequireAuth,
 		slotController.GetAllAvailableSlots,
 	)
 
-	// =========================
-	// CREATE APPOINTMENT (ของปลา)
-	// =========================
 	r.POST("/api/appointments",
 		middlewares.RequireAuth,
 		appointmentController.CreateAppointment,
@@ -84,7 +90,6 @@ func main() {
 		appointmentController.CancelAppointment,
 	)
 
-	// UPDATE STATUS (ของพี่อิทธิเชษฐ์)
 	r.PATCH("/api/appointments/:id/status",
 		middlewares.RequireAuth,
 		appointmentController.UpdateStatus,
