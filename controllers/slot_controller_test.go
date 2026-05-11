@@ -57,6 +57,7 @@ func TestGetAllAvailableSlots_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	c.Set("role", "assistant")
 
 	controller.GetAllAvailableSlots(c)
 
@@ -75,6 +76,7 @@ func TestGetAllAvailableSlots_NotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	c.Set("role", "assistant")
 
 	controller.GetAllAvailableSlots(c)
 
@@ -92,6 +94,7 @@ func TestGetAllAvailableSlots_InternalError(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	c.Set("role", "assistant")
 
 	controller.GetAllAvailableSlots(c)
 

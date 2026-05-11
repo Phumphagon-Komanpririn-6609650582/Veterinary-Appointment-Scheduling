@@ -337,6 +337,12 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 		VALUES ('S-001', 1);
 	`)
 
+	// เพิ่ม appointment เพื่อให้ UpdateStatus หาเจอ
+	db.Exec(`
+		INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status)
+		VALUES ('A-001', 'S-001', 'Lucky', 'Dog', 'ปลา', 'ตรวจสุขภาพ', 'in-progress');
+	`)
+
 	repo := repositories.NewAppointmentRepository(db)
 	service := NewAppointmentService(repo)
 
@@ -356,7 +362,7 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 	// =====================================================
 	t.Run("UpdateStatus", func(t *testing.T) {
 
-		err := service.UpdateStatus("A-001", "completed")
+		err := service.UpdateStatus("A-001", "done")
 
 		assert.NoError(t, err)
 	})
