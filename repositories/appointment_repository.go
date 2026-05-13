@@ -3,6 +3,8 @@ package repositories
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 	"veterinary-api/models"
 )
@@ -57,8 +59,33 @@ func (r *AppointmentRepository) GetByID(id string) (*models.Appointment, error) 
 // =====================================================================
 func (r *AppointmentRepository) CreateAppointment(app *models.Appointment) error {
 
+	// สร้าง ID ใหม่
+	var lastID string
+
+	queryLastID := `
+		SELECT id
+		FROM appointments
+		ORDER BY id DESC
+		LIMIT 1
+	`
+
+	r.DB.QueryRow(queryLastID).Scan(&lastID)
+
+	newID := "A-001"
+
+	if lastID != "" {
+		numberPart := lastID[2:]
+		number, _ := strconv.Atoi(numberPart)
+		number++
+
+		newID = fmt.Sprintf("A-%03d", number)
+	}
+
+	app.ID = newID
+
 	query := `
 		INSERT INTO appointments (
+			id,
 			slot_id,
 			pet_name,
 			pet_type,
@@ -66,11 +93,12 @@ func (r *AppointmentRepository) CreateAppointment(app *models.Appointment) error
 			reason,
 			status
 		)
-		VALUES (?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	_, err := r.DB.Exec(
 		query,
+		app.ID,
 		app.SlotID,
 		app.PetName,
 		app.PetType,
