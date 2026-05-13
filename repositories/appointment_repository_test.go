@@ -116,13 +116,10 @@ func TestAppointmentRepository_GetByID_TimeParseError(t *testing.T) {
 }
 
 // ==========================================
-// 👩‍💻 เทสของปลา
+// 👩‍💻 เทสของปลา (CreateAppointment)
 // ==========================================
 func TestAppointmentRepository_CheckSlotExists(t *testing.T) {
 
-	// =====================================================
-	// slot exists
-	// =====================================================
 	t.Run("Slot_Exists", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -147,9 +144,6 @@ func TestAppointmentRepository_CheckSlotExists(t *testing.T) {
 		assert.True(t, result)
 	})
 
-	// =====================================================
-	// slot not exists
-	// =====================================================
 	t.Run("Slot_Not_Exists", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -169,9 +163,6 @@ func TestAppointmentRepository_CheckSlotExists(t *testing.T) {
 		assert.False(t, result)
 	})
 
-	// =====================================================
-	// database closed
-	// =====================================================
 	t.Run("Database_Closed", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -185,17 +176,12 @@ func TestAppointmentRepository_CheckSlotExists(t *testing.T) {
 		assert.False(t, result)
 	})
 
-	// =====================================================
-	// table not found
-	// =====================================================
 	t.Run("Table_Not_Found", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
 		defer db.Close()
 
 		repo := NewAppointmentRepository(db)
-
-		// ไม่สร้าง table
 
 		result := repo.CheckSlotExists("S-001")
 
@@ -206,12 +192,8 @@ func TestAppointmentRepository_CheckSlotExists(t *testing.T) {
 // ==========================================
 // 👩‍💻 เทสของปลา (CreateAppointment)
 // ==========================================
-
 func TestAppointmentRepository_CreateAppointment(t *testing.T) {
 
-	// =====================================================
-	// create success
-	// =====================================================
 	t.Run("CreateAppointment_Success", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -221,7 +203,7 @@ func TestAppointmentRepository_CreateAppointment(t *testing.T) {
 
 		db.Exec(`
 			CREATE TABLE appointments (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				id TEXT PRIMARY KEY,
 				slot_id TEXT,
 				pet_name TEXT,
 				pet_type TEXT,
@@ -243,11 +225,68 @@ func TestAppointmentRepository_CreateAppointment(t *testing.T) {
 		err := repo.CreateAppointment(app)
 
 		assert.NoError(t, err)
+
+		// เช็กว่า generate id ได้
+		assert.Equal(t, "A-001", app.ID)
 	})
 
-	// =====================================================
-	// create db error
-	// =====================================================
+	t.Run("CreateAppointment_With_Existing_ID", func(t *testing.T) {
+
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		repo := NewAppointmentRepository(db)
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		app := &models.Appointment{
+			SlotID:     "S-002",
+			PetName:    "Chaeng",
+			PetType:    "Cat",
+			ClientName: "ปลา",
+			Reason:     "ตรวจสุขภาพ",
+			Status:     "in-progress",
+		}
+
+		err := repo.CreateAppointment(app)
+
+		assert.NoError(t, err)
+
+		// ต้อง generate id ต่อ
+		assert.Equal(t, "A-003", app.ID)
+	})
+
 	t.Run("CreateAppointment_DB_Error", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -274,12 +313,8 @@ func TestAppointmentRepository_CreateAppointment(t *testing.T) {
 // ==========================================
 // 👩‍💻 เทสของปลา (DecreaseSlotLimit)
 // ==========================================
-
 func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 
-	// =====================================================
-	// success
-	// =====================================================
 	t.Run("DecreaseSlotLimit_Success", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -314,9 +349,6 @@ func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 		assert.Equal(t, 0, limit)
 	})
 
-	// =====================================================
-	// slot full
-	// =====================================================
 	t.Run("DecreaseSlotLimit_Full", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -342,9 +374,6 @@ func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 		assert.Equal(t, "slot is full", err.Error())
 	})
 
-	// =====================================================
-	// db closed
-	// =====================================================
 	t.Run("DecreaseSlotLimit_DB_Closed", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
@@ -358,17 +387,12 @@ func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	// =====================================================
-	// table not found
-	// =====================================================
 	t.Run("DecreaseSlotLimit_Table_Not_Found", func(t *testing.T) {
 
 		db, _ := sql.Open("sqlite3", ":memory:")
 		defer db.Close()
 
 		repo := NewAppointmentRepository(db)
-
-		// ไม่สร้าง table
 
 		err := repo.DecreaseSlotLimit("S-001")
 
