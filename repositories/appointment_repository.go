@@ -219,6 +219,17 @@ func (r *AppointmentRepository) GetAppointments() {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (อัปเดตสถานะการรักษา)
 // =====================================================================
-func (r *AppointmentRepository) UpdateStatus() {
+func (r *AppointmentRepository) UpdateStatus(id string, status string) error {
+	query := `UPDATE appointments SET status = ? WHERE id = ?`
+	result, err := r.DB.Exec(query, status, id)
+	if err != nil {
+		return err
+	}
 
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("appointment not found")
+	}
+
+	return nil
 }

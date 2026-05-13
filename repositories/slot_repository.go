@@ -51,8 +51,12 @@ func (r *SlotRepository) GetAvailableSlots(vetID string) ([]models.Slot, error) 
 // =====================================================================
 // 👩‍💻 พื้นที่ของ: ไตเติ้ล (Insert เวลาทำงานใหม่)
 // =====================================================================
-func (r *SlotRepository) AddSlot() {
+func (r *SlotRepository) AddSlot(slot models.Slot) error {
+	// ใช้ AddSlot ตามที่เพื่อนตั้งไว้ และส่งข้อมูลลงตาราง slots
+	query := `INSERT INTO slots (id, vet_id, date, time_period, slot_limit) VALUES (?, ?, ?, ?, ?)`
 
+	_, err := r.DB.Exec(query, slot.ID, slot.VetID, slot.Date, slot.TimePeriod, slot.SlotLimit)
+	return err
 }
 
 // =====================================================================

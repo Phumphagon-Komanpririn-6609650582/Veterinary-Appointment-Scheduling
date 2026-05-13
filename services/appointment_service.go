@@ -128,6 +128,16 @@ func (s *AppointmentService) GetAppointments() ([]models.Appointment, error) {
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์
 // =====================================================================
 func (s *AppointmentService) UpdateStatus(id string, status string) error {
-	// ต้องรับพารามิเตอร์ให้ตรงกับ Interface
-	return nil
+	// ตรวจสอบสถานะที่อนุญาต
+	validStatuses := map[string]bool{
+		"done":        true,
+		"in-progress": true,
+		"cancelled":   true,
+	}
+
+	if !validStatuses[status] {
+		return errors.New("invalid status: must be 'done', 'in-progress', or 'cancelled'")
+	}
+
+	return s.Repo.UpdateStatus(id, status)
 }

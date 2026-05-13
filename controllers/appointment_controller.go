@@ -115,5 +115,30 @@ func (c *AppointmentController) GetAppointments(ctx *gin.Context) {
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (PATCH /api/appointments/:id/status)
 // =====================================================================
 func (c *AppointmentController) UpdateStatus(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var statusReq struct {
+		Status string `json:"status" binding:"required"`
+	}
 
+	if err := ctx.ShouldBindJSON(&statusReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "invalid request data: status is required",
+		})
+		return
+	}
+
+	err := c.Service.UpdateStatus(id, statusReq.Status)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "appointment status updated successfully",
+	})
 }
