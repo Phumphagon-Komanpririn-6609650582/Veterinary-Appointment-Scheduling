@@ -11,7 +11,7 @@ type IAppointmentService interface {
 	CreateAppointment(app *models.Appointment) error
 	UpdateAppointment(app models.Appointment) error
 	CancelAppointment(id string) error
-	GetAppointments() ([]models.Appointment, error)
+	GetAppointments(date string, vetID string) ([]models.Appointment, error)
 	UpdateStatus(id string, status string) error
 }
 
@@ -116,12 +116,9 @@ func (s *AppointmentService) CancelAppointment(id string) error {
 	return s.Repo.CancelAppointment(id)
 }
 
-// =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่สิรภพ
-// =====================================================================
-func (s *AppointmentService) GetAppointments() ([]models.Appointment, error) {
-	// ต้องคืนค่าให้ตรงกับ Interface
-	return nil, nil
+// GetAppointments
+func (s *AppointmentService) GetAppointments(date string, vetID string) ([]models.Appointment, error) {
+	return s.Repo.GetAppointments(date, vetID)
 }
 
 // =====================================================================

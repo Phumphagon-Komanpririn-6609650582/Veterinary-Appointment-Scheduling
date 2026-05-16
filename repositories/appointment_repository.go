@@ -210,10 +210,49 @@ func (r *AppointmentRepository) CancelAppointment(id string) error {
 }
 
 // =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่สิรภพ (ดึงรายการนัดพร้อม Filter)
+// ดึงรายการนัดพร้อม Filter
 // =====================================================================
-func (r *AppointmentRepository) GetAppointments() {
+func (r *AppointmentRepository) GetAppointments(date string, vetID string) ([]models.Appointment, error) {
+	query := `
+		SELECT 
+			a.id, a.slot_id, a.pet_name, a.pet_type, a.client_name, a.reason, a.status,
+			s.date, SUBSTR(s.time_period, 1, 5) as start_time
+		FROM appointments a
+		JOIN slots s ON a.slot_id = s.id
+		WHERE (s.date = ? OR ? = '') AND (s.vet_id = ? OR ? = '')
+	`
 
+	rows, err := r.DB.Query(query, date, date, vetID, vetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	appointments := []models.Appointment{}
+	layout := "2006-01-02 15:04"
+
+	for rows.Next() {
+		var app models.Appointment
+		var dateStr, timeStr string
+
+		err := rows.Scan(
+			&app.ID, &app.SlotID, &app.PetName, &app.PetType,
+			&app.ClientName, &app.Reason, &app.Status,
+			&dateStr, &timeStr,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// รวมร่าง String เป็นฟอร์แมตที่ Go เข้าใจ
+		fullDateTimeStr := dateStr + " " + timeStr
+		parsedTime, _ := time.ParseInLocation(layout, fullDateTimeStr, time.Local)
+		app.AppointmentTime = parsedTime
+
+		appointments = append(appointments, app)
+	}
+
+	return appointments, nil
 }
 
 // =====================================================================
