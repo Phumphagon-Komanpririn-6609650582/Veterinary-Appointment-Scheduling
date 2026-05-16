@@ -69,6 +69,21 @@ func main() {
 	// =========================
 	// CREATE APPOINTMENT (ของปลา)
 	// =========================
+	r.GET("/api/appointments",
+		middlewares.RequireAuth,
+		appointmentController.GetAllAppointments,
+	)
+
+	r.GET("/api/appointments/id/:id",
+		middlewares.RequireAuth,
+		appointmentController.GetAppointmentsByVet,
+	)
+
+	r.GET("/api/appointments/date/:date",
+		middlewares.RequireAuth,
+		appointmentController.GetAppointmentsByDate,
+	)
+
 	r.POST("/api/appointments",
 		middlewares.RequireAuth,
 		appointmentController.CreateAppointment,

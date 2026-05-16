@@ -399,3 +399,170 @@ func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestGetAppointmentRepository_GetAppointment(t *testing.T) {
+	//success
+	t.Run("GetAllAppointment_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAllAppointments()
+
+		assert.NoError(t, err)
+
+	})
+
+
+	t.Run("GetAllAppointmentByVet_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+		
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT
+		date TEXT, 
+		);
+		`)
+		db.Exec(`INSERT INTO slot (
+				id,
+				vet_id,
+				date,
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'unknown',
+			);`)
+
+		VetID := "U-002"
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAppointmentsByVet(VetID)
+
+		assert.NoError(t, err)
+
+	})
+	t.Run("GetAppointmentByDate_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress',
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT
+		date TEXT, 
+		);
+		`)
+		db.Exec(`INSERT INTO slot (
+				id,
+				vet_id,
+				date,
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'2090-12-12',
+			);`)
+
+		Date := "2090-12-12"
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAppointmentsByDate(Date)
+
+		assert.NoError(t, err)
+
+	})
+}
