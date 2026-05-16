@@ -349,9 +349,9 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 	// =====================================================
 	// GetAppointments
 	// =====================================================
-	t.Run("GetAppointments", func(t *testing.T) {
+	t.Run("GetAllAppointments", func(t *testing.T) {
 
-		result, err := service.GetAppointments()
+		result, err := service.GetAllAppointments()
 
 		assert.NoError(t, err)
 		assert.Nil(t, result)

@@ -33,8 +33,17 @@ func (m *MockAppointmentService) CancelAppointment(id string) error {
 	return args.Error(0)
 }
 
-func (m *MockAppointmentService) GetAppointments() ([]models.Appointment, error) {
+func (m *MockAppointmentService) GetAllAppointments() ([]models.Appointment, error) {
 	args := m.Called()
+	return args.Get(0).([]models.Appointment), args.Error(1)
+}
+func (m *MockAppointmentService) GetAppointmentsByVet(id string) ([]models.Appointment, error) {
+	args := m.Called(id)
+	return args.Get(0).([]models.Appointment), args.Error(1)
+}
+
+func (m *MockAppointmentService) GetAppointmentsByDate(date string) ([]models.Appointment, error) {
+	args := m.Called(date)
 	return args.Get(0).([]models.Appointment), args.Error(1)
 }
 
