@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"veterinary-api/models"
+	"veterinary-api/repositories"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -35,15 +36,24 @@ func (m *MockAppointmentService) CancelAppointment(id string) error {
 
 func (m *MockAppointmentService) GetAllAppointments() ([]models.Appointment, error) {
 	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).([]models.Appointment), args.Error(1)
 }
 func (m *MockAppointmentService) GetAppointmentsByVet(id string) ([]models.Appointment, error) {
 	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).([]models.Appointment), args.Error(1)
 }
 
 func (m *MockAppointmentService) GetAppointmentsByDate(date string) ([]models.Appointment, error) {
 	args := m.Called(date)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).([]models.Appointment), args.Error(1)
 }
 
@@ -374,13 +384,14 @@ func TestAppointmentController_UpdateStatus_Mock(t *testing.T) {
 func TestAppointmentController_GetAppointment_Mock(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	//success
-	t.Run("GetAllAppointment_success", func(t *testing.T) {
+	t.Run("GetAllAppointment_Success", func(t *testing.T) {
 		mockService := new(MockAppointmentService)
 		ctrl := NewAppointmentController(mockService)
 		mockAppointments := []models.Appointment{
 			{
-				ID:         "A-001",
-				PetName:    "Old",
+				ID:         "A-006",
+				SlotID:     "S-003",
+				PetName:    "Jeff",
 				PetType:    "Dog",
 				ClientName: "John",
 				Reason:     "Checkup",
@@ -402,5 +413,138 @@ func TestAppointmentController_GetAppointment_Mock(t *testing.T) {
 		ctrl.GetAllAppointments(c)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
+	t.Run("GetAppointmentsByVet_Success", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		mockAppointments := []models.Appointment{
+			{
+				ID:         "A-006",
+				SlotID:     "S-003",
+				PetName:    "Jeff",
+				PetType:    "Dog",
+				ClientName: "John",
+				Reason:     "Checkup",
+				Status:     "pending",
+			},
+		}
+
+		mockService.On("GetAppointmentsByVet", "U-003").Return(mockAppointments, nil)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "id", Value: "U-003"}}
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments/id/U-003",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAppointmentsByVet(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("GetAppointmentsByDate_Success", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		mockAppointments := []models.Appointment{
+			{
+				ID:         "A-006",
+				SlotID:     "S-003",
+				PetName:    "Jeff",
+				PetType:    "Dog",
+				ClientName: "John",
+				Reason:     "Checkup",
+				Status:     "pending",
+			},
+		}
+
+		mockService.On("GetAppointmentsByDate", "2030-10-10").Return(mockAppointments, nil)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "date", Value: "2030-10-10"}}
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments/date/2030-10-10",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAppointmentsByDate(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
+	//fail
+	t.Run("GetAllAppointment_Fail", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		mockService.On("GetAllAppointments").Return(nil, repositories.ErrNotFound)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAllAppointments(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockService.AssertExpectations(t)
+	})
+	t.Run("GetAppointmentsByVet_Fail", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		mockService.On("GetAppointmentsByVet", "U-003").Return(nil, repositories.ErrNotFound)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "id", Value: "U-003"}}
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments/id/U-003",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAppointmentsByVet(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockService.AssertExpectations(t)
+	})
+	t.Run("GetAppointmentsByDate_Fail", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+
+		mockService.On("GetAppointmentsByDate", "2030-10-10").Return(nil, repositories.ErrNotFound)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "date", Value: "2030-10-10"}}
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments/date/2030-10-10",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAppointmentsByDate(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
