@@ -367,3 +367,40 @@ func TestAppointmentController_UpdateStatus_Mock(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "status is required")
 	})
 }
+
+// =====================================================================
+// 👩‍💻 พื้นที่ของ: ปอ (GET /api/appointments)
+// =====================================================================
+func TestAppointmentController_GetAppointment_Mock(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	//success
+	t.Run("GetAllAppointment_success", func(t *testing.T) {
+		mockService := new(MockAppointmentService)
+		ctrl := NewAppointmentController(mockService)
+		mockAppointments := []models.Appointment{
+			{
+				ID:         "A-001",
+				PetName:    "Old",
+				PetType:    "Dog",
+				ClientName: "John",
+				Reason:     "Checkup",
+				Status:     "pending",
+			},
+		}
+		mockService.On("GetAllAppointments").Return(mockAppointments, nil)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		c.Request, _ = http.NewRequest(
+			"GET",
+			"/api/appointments",
+			strings.NewReader(""),
+		)
+
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		ctrl.GetAllAppointments(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
