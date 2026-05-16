@@ -33,8 +33,8 @@ func (m *MockAppointmentService) CancelAppointment(id string) error {
 	return args.Error(0)
 }
 
-func (m *MockAppointmentService) GetAppointments() ([]models.Appointment, error) {
-	args := m.Called()
+func (m *MockAppointmentService) GetAppointments(date string, vetID string) ([]models.Appointment, error) {
+	args := m.Called(date, vetID)
 	return args.Get(0).([]models.Appointment), args.Error(1)
 }
 

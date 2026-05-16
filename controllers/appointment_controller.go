@@ -104,11 +104,28 @@ func (ctrl *AppointmentController) CancelAppointment(c *gin.Context) {
 	})
 }
 
-// =====================================================================
-// 👨‍💻 พื้นที่ของ: พี่สิรภพ (GET /api/appointments)
-// =====================================================================
+// (GET /api/appointments)
 func (c *AppointmentController) GetAppointments(ctx *gin.Context) {
+	date := ctx.Query("date")
+	vetID := ctx.Query("vet_id")
 
+	appointments, err := c.Service.GetAppointments(date, vetID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "failed to retrieve appointments",
+		})
+		return
+	}
+
+	if appointments == nil {
+		appointments = []models.Appointment{}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   appointments,
+	})
 }
 
 // =====================================================================

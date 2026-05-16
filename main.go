@@ -90,6 +90,12 @@ func main() {
 		appointmentController.UpdateStatus,
 	)
 
+	// GET APPOINTMENTS
+	r.GET("/api/appointments",
+		middlewares.RequireAuth,
+		appointmentController.GetAppointments,
+	)
+
 	// รันเซิร์ฟเวอร์
 	log.Println("Server is running on http://localhost:8080")
 	r.Run(":8080")

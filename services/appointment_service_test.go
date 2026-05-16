@@ -315,6 +315,9 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 	db.Exec(`
 		CREATE TABLE slots (
 			id TEXT PRIMARY KEY,
+			vet_id TEXT,
+			date TEXT,
+			time_period TEXT,
 			slot_limit INTEGER
 		);
 	`)
@@ -333,8 +336,8 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 
 	// เพิ่ม slot
 	db.Exec(`
-		INSERT INTO slots (id, slot_limit)
-		VALUES ('S-001', 1);
+		INSERT INTO slots (id, vet_id, date, time_period, slot_limit)
+		VALUES ('S-001', 'V-001', '2026-05-10', '09:00-10:00', 1);
 	`)
 
 	// เพิ่ม appointment เพื่อให้ UpdateStatus หาเจอ
@@ -349,12 +352,21 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 	// =====================================================
 	// GetAppointments
 	// =====================================================
-	t.Run("GetAppointments", func(t *testing.T) {
+	t.Run("GetAppointments_All", func(t *testing.T) {
 
-		result, err := service.GetAppointments()
+		result, err := service.GetAppointments("", "")
 
 		assert.NoError(t, err)
-		assert.Nil(t, result)
+		assert.NotNil(t, result)
+		assert.GreaterOrEqual(t, len(result), 1)
+	})
+
+	t.Run("GetAppointments_WithFilter", func(t *testing.T) {
+
+		result, err := service.GetAppointments("2099-12-31", "")
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
 	})
 
 	// =====================================================
