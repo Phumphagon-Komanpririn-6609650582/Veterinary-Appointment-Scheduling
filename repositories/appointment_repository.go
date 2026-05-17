@@ -212,9 +212,115 @@ func (r *AppointmentRepository) CancelAppointment(id string) error {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่สิรภพ (ดึงรายการนัดพร้อม Filter)
 // =====================================================================
-func (r *AppointmentRepository) GetAppointments() {
+func (r *AppointmentRepository) GetAllAppointments() ([]models.Appointment, error) {
+	query := `
+		SELECT COALESCE(id, ''),slot_id,pet_name,pet_type,client_name,reason,status
+		FROM appointments
+	`
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var appointments []models.Appointment
+
+	for rows.Next() {
+		var appointment models.Appointment
+		if err := rows.Scan(
+			&appointment.ID,
+			&appointment.SlotID,
+			&appointment.PetName,
+			&appointment.PetType,
+			&appointment.ClientName,
+			&appointment.Reason,
+			&appointment.Status); err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, appointment)
+	}
+
+	if len(appointments) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return appointments, nil
 
 }
+func (r *AppointmentRepository) GetAppointmentsByVet(vetID string) ([]models.Appointment, error) {
+	query := `
+		SELECT COALESCE(appointments.id, ''),appointments.slot_id,appointments.pet_name,appointments.pet_type,appointments.client_name,appointments.reason,appointments.status
+		FROM appointments
+		INNER JOIN slots ON appointments.slot_id = slots.id
+		WHERE slots.vet_id = ?
+	`
+	rows, err := r.DB.Query(query, vetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var appointments []models.Appointment
+	for rows.Next() {
+		var appointment models.Appointment
+		if err := rows.Scan(
+			&appointment.ID,
+			&appointment.SlotID,
+			&appointment.PetName,
+			&appointment.PetType,
+			&appointment.ClientName,
+			&appointment.Reason,
+			&appointment.Status,
+		); err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, appointment)
+	}
+
+	if len(appointments) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return appointments, nil
+}
+
+func (r *AppointmentRepository) GetAppointmentsByDate(Date string) ([]models.Appointment, error) {
+	query := `
+		SELECT  COALESCE(appointments.id, ''),appointments.slot_id,appointments.pet_name,appointments.pet_type,appointments.client_name,appointments.reason,appointments.status
+		FROM appointments
+		INNER JOIN slots ON appointments.slot_id = slots.id
+		WHERE slots.date = ?
+	`
+	rows, err := r.DB.Query(query, Date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var appointments []models.Appointment
+	for rows.Next() {
+		var appointment models.Appointment
+		if err := rows.Scan(
+			&appointment.ID,
+			&appointment.SlotID,
+			&appointment.PetName,
+			&appointment.PetType,
+			&appointment.ClientName,
+			&appointment.Reason,
+			&appointment.Status,
+		); err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, appointment)
+	}
+
+	if len(appointments) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return appointments, nil
+}
+
 
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่อิทธิเชษฐ์ (อัปเดตสถานะการรักษา)

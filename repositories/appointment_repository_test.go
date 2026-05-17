@@ -399,3 +399,433 @@ func TestAppointmentRepository_DecreaseSlotLimit(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+// ==========================================
+// 👩‍💻 เทสของปอ (GetAppointment)
+// ==========================================
+func TestGetAppointmentRepository_GetAppointment(t *testing.T) {
+	//success
+	t.Run("GetAllAppointment_Success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAllAppointments()
+
+		assert.NoError(t, err)
+
+		assert.Len(t, appointments, 1)
+		assert.Equal(t, "A-002", appointments[0].ID)
+		assert.Equal(t, "Old", appointments[0].PetName)
+
+	})
+
+	t.Run("GetAllAppointmentByVet_Success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-003',
+				'S-001',
+				'Yam',
+				'Fish',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+				id,
+				vet_id,
+				date
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'unknown'
+			);`)
+
+		VetID := "U-002"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByVet(VetID)
+
+		assert.NoError(t, err)
+
+		assert.Len(t, appointments, 1)
+		assert.Equal(t, "A-003", appointments[0].ID)
+		assert.Equal(t, "Yam", appointments[0].PetName)
+
+	})
+	t.Run("GetAppointmentByDate_Success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-004',
+				'S-001',
+				'Ralf',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+				id,
+				vet_id,
+				date
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'2090-12-12'
+			);`)
+
+		Date := "2090-12-12"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByDate(Date)
+
+		assert.NoError(t, err)
+
+		assert.Len(t, appointments, 1)
+		assert.Equal(t, "A-004", appointments[0].ID)
+		assert.Equal(t, "Ralf", appointments[0].PetName)
+
+	})
+
+	//not found -->Empty DataBase,Invalid Input //
+	t.Run("GetAllAppointment_Not_Found", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAllAppointments()
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, ErrNotFound, err)
+		assert.Nil(t, appointments)
+
+	})
+
+	t.Run("GetAllAppointmentByVet_Not_Found", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+
+		VetID := "U-002"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByVet(VetID)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, ErrNotFound, err)
+		assert.Nil(t, appointments)
+
+	})
+
+	t.Run("GetAllAppointmentByVet_Invalid_Input", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+				id,
+				vet_id,
+				date
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'unknown'
+			);`)
+
+		VetID := "U-009"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByVet(VetID)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, ErrNotFound, err)
+		assert.Nil(t, appointments)
+
+	})
+	t.Run("GetAppointmentByDate_Not_Found", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT 
+		);
+		`)
+
+		Date := "2090-12-12"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByDate(Date)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, ErrNotFound, err)
+		assert.Nil(t, appointments)
+	})
+
+	t.Run("GetAppointmentByDate_Invalid_Input", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-002',
+				'S-001',
+				'Old',
+				'Dog',
+				'Old Client',
+				'Old Reason',
+				'in-progress'
+			);
+		`)
+
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+				id,
+				vet_id,
+				date
+			)
+			VALUES (
+				'S-001',
+				'U-002',
+				'2090-12-12'
+			);`)
+
+		Date := "20390-15-15"
+		repo := NewAppointmentRepository(db)
+		appointments, err := repo.GetAppointmentsByDate(Date)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, ErrNotFound, err)
+		assert.Nil(t, appointments)
+
+	})
+
+	//database error
+	t.Run("GetAllAppointment_DB_Error", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		db.Close()
+
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAllAppointments()
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "sql: database is closed")
+
+	})
+
+	t.Run("GetAllAppointmentByVet_DB_Error", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		db.Close()
+		VetID := "U-002"
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAppointmentsByVet(VetID)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "sql: database is closed")
+	})
+	t.Run("GetAppointmentByDate_DB_Error", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		db.Close()
+		Date := "2090-12-12"
+		repo := NewAppointmentRepository(db)
+		_, err := repo.GetAppointmentsByDate(Date)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "sql: database is closed")
+	})
+
+}

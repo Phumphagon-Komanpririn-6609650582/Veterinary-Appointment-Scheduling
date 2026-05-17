@@ -107,8 +107,59 @@ func (ctrl *AppointmentController) CancelAppointment(c *gin.Context) {
 // =====================================================================
 // 👨‍💻 พื้นที่ของ: พี่สิรภพ (GET /api/appointments)
 // =====================================================================
-func (c *AppointmentController) GetAppointments(ctx *gin.Context) {
+func (c *AppointmentController) GetAllAppointments(ctx *gin.Context) {
+	appointments, err := c.Service.GetAllAppointments()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+	if appointments == nil {
+		ctx.JSON(http.StatusNoContent, gin.H{
+			"message": "no appointment",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, appointments)
+}
+func (c *AppointmentController) GetAppointmentsByVet(ctx *gin.Context) {
+	vetID := ctx.Param("id")
 
+	appointments, err := c.Service.GetAppointmentsByVet(vetID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+	if appointments == nil {
+		ctx.JSON(http.StatusNoContent, gin.H{
+			"message": "no appointment",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, appointments)
+}
+
+func (c *AppointmentController) GetAppointmentsByDate(ctx *gin.Context) {
+	Date := ctx.Param("date")
+
+	appointments, err := c.Service.GetAppointmentsByDate(Date)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+	if appointments == nil {
+		ctx.JSON(http.StatusNoContent, gin.H{
+			"message": "no appointment",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, appointments)
 }
 
 // =====================================================================

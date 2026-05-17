@@ -349,9 +349,9 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 	// =====================================================
 	// GetAppointments
 	// =====================================================
-	t.Run("GetAppointments", func(t *testing.T) {
+	t.Run("GetAllAppointments", func(t *testing.T) {
 
-		result, err := service.GetAppointments()
+		result, err := service.GetAllAppointments()
 
 		assert.NoError(t, err)
 		assert.Nil(t, result)
@@ -422,5 +422,261 @@ func TestAppointmentService_InterfaceFunctions(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Equal(t, "failed to create appointment", err.Error())
+	})
+}
+
+// =====================================================================
+// 👨‍💻 พื้นที่ของ: ปอ (Test GetAppointment)
+// =====================================================================
+func TestAppointmentService_GetAppointment(t *testing.T) {
+
+	//success
+	t.Run("GetAllAppointments_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-005',
+				'S-001',
+				'Kit',
+				'Cat',
+				'Old Lady',
+				'Forgoten',
+				'done?'
+			);
+		`)
+
+		result, err := service.GetAllAppointments()
+
+		assert.NoError(t, err)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "A-005", result[0].ID)
+		assert.Equal(t, "Kit", result[0].PetName)
+	})
+	t.Run("GetAppointmentsByVet_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-005',
+				'S-001',
+				'Kit',
+				'Cat',
+				'Old Lady',
+				'Forgoten',
+				'done?'
+			);
+		`)
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+			id,
+			vet_id,
+			date
+		)
+		VALUES (
+			'S-001',
+			'U-003',
+			'2029-06-07'
+		);`)
+
+		vet_id := "U-003"
+		result, err := service.GetAppointmentsByVet(vet_id)
+
+		assert.NoError(t, err)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "Old Lady", result[0].ClientName)
+		assert.Equal(t, "Forgoten", result[0].Reason)
+	})
+	t.Run("GetAllAppointments_success", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`
+			INSERT INTO appointments (
+				id,
+				slot_id,
+				pet_name,
+				pet_type,
+				client_name,
+				reason,
+				status
+			)
+			VALUES (
+				'A-005',
+				'S-001',
+				'Kit',
+				'Cat',
+				'Old Lady',
+				'Forgoten',
+				'done?'
+			);
+		`)
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		db.Exec(`INSERT INTO slots (
+			id,
+			vet_id,
+			date
+		)
+		VALUES (
+			'S-001',
+			'U-003',
+			'2029-06-07'
+		);`)
+		date := "2029-06-07"
+		result, err := service.GetAppointmentsByDate(date)
+
+		assert.NoError(t, err)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "Cat", result[0].PetType)
+		assert.Equal(t, "done?", result[0].Status)
+	})
+
+	//fail
+	t.Run("GetAllAppointments_Fail", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+
+		result, err := service.GetAllAppointments()
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, repositories.ErrNotFound, err)
+		assert.Nil(t, result)
+	})
+	t.Run("GetAppointmentsByVet_Fail", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		vet_id := "U-003"
+		result, err := service.GetAppointmentsByVet(vet_id)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, repositories.ErrNotFound, err)
+		assert.Nil(t, result)
+	})
+	t.Run("GetAllAppointments_Fail", func(t *testing.T) {
+		db, _ := sql.Open("sqlite3", ":memory:")
+		defer db.Close()
+		repo := repositories.NewAppointmentRepository(db)
+		service := NewAppointmentService(repo)
+		db.Exec(`
+			CREATE TABLE appointments (
+				id TEXT PRIMARY KEY,
+				slot_id TEXT,
+				pet_name TEXT,
+				pet_type TEXT,
+				client_name TEXT,
+				reason TEXT,
+				status TEXT
+			);
+		`)
+		db.Exec(`CREATE TABLE slots (
+		id TEXT PRIMARY KEY,
+		vet_id TEXT,
+		date TEXT
+		);
+		`)
+		date := "2029-06-07"
+		result, err := service.GetAppointmentsByDate(date)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, repositories.ErrNotFound, err)
+		assert.Nil(t, result)
 	})
 }
