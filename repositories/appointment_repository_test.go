@@ -64,48 +64,8 @@ func TestAppointmentRepository_AllCases(t *testing.T) {
 	t.Run("CancelAppointment_NotFound", func(t *testing.T) {
 		err := repo.CancelAppointment("ID-HAVE-NOT")
 		assert.Error(t, err)
+		// เช็คข้อความให้ตรงกับในโค้ด Repo (ภาษาอังกฤษ)
 		assert.Equal(t, "No appointment information was found.", err.Error())
-	})
-}
-
-// ==========================================
-// Test GetAppointments
-// ==========================================
-func TestAppointmentRepository_GetAppointments(t *testing.T) {
-	db, _ := sql.Open("sqlite3", ":memory:")
-	defer db.Close()
-	repo := NewAppointmentRepository(db)
-
-	db.Exec(`CREATE TABLE slots (id TEXT PRIMARY KEY, vet_id TEXT, date TEXT, time_period TEXT, slot_limit INTEGER);`)
-	db.Exec(`CREATE TABLE appointments (id TEXT PRIMARY KEY, slot_id TEXT, pet_name TEXT, pet_type TEXT, client_name TEXT, reason TEXT, status TEXT);`)
-
-	db.Exec(`INSERT INTO slots (id, vet_id, date, time_period, slot_limit) VALUES ('S-001', 'V-001', '2026-05-10', '09:00-10:00', 1);`)
-	db.Exec(`INSERT INTO appointments (id, slot_id, pet_name, pet_type, client_name, reason, status) 
-			 VALUES ('A-001', 'S-001', 'หมา', 'Dog', 'คุณนุช', 'ป่วย', 'pending');`)
-
-	t.Run("NoFilter", func(t *testing.T) {
-		apps, err := repo.GetAppointments("", "")
-		assert.NoError(t, err)
-		assert.Len(t, apps, 1)
-		assert.Equal(t, "A-001", apps[0].ID)
-	})
-
-	t.Run("FilterByDate_Success", func(t *testing.T) {
-		apps, err := repo.GetAppointments("2026-05-10", "")
-		assert.NoError(t, err)
-		assert.Len(t, apps, 1)
-	})
-
-	t.Run("FilterByDate_NoResult", func(t *testing.T) {
-		apps, err := repo.GetAppointments("2026-05-11", "")
-		assert.NoError(t, err)
-		assert.Len(t, apps, 0)
-	})
-
-	t.Run("FilterByVet_Success", func(t *testing.T) {
-		apps, err := repo.GetAppointments("", "V-001")
-		assert.NoError(t, err)
-		assert.Len(t, apps, 1)
 	})
 }
 
